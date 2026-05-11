@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --font-inter: "Inter", sans-serif;
+  --font-newsreader: "Newsreader", serif;
+
+  --color-cream: #FBFAEE;
+  --color-deep-navy: #0F172A;
+  --color-heritage-gold: #D4AF37;
+  --color-heritage-gold-dark: #b6962e;
+  
+  --color-surface-base: var(--color-cream);
+  --color-surface-elevated: #ffffff;
+  --color-surface-subtle: #f0efe3;
+  --color-surface-navy: var(--color-deep-navy);
+
+  --color-text-primary: var(--color-deep-navy);
+  --color-text-secondary: #475569;
+  --color-text-inverse: var(--color-cream);
+  --color-text-gold: var(--color-heritage-gold);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-inter);
+    background-color: var(--color-surface-base);
+    color: var(--color-text-primary);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-newsreader);
+  }
+
+  /* No-line rule: use tonal depth instead of borders */
+  * {
+    border-color: transparent;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-deep-navy text-cream font-medium rounded-xl px-8 py-4 transition-all duration-200;
+    min-height: 56px; /* Accessible touch target */
+  }
+  .btn-primary:hover {
+    @apply bg-deep-navy/90;
+  }
+
+  .btn-gold {
+    @apply bg-heritage-gold text-deep-navy font-semibold rounded-xl px-8 py-4 transition-all duration-200;
+    min-height: 56px;
+  }
+  .btn-gold:hover {
+    @apply bg-heritage-gold-dark;
+  }
+
+  .btn-secondary {
+    @apply bg-surface-elevated text-deep-navy font-medium rounded-xl px-8 py-4 transition-all duration-200 shadow-sm;
+    min-height: 56px;
+  }
+  .btn-secondary:hover {
+    @apply bg-surface-elevated/90 shadow-md;
+  }
+  
+  .card-tonal {
+    @apply bg-surface-elevated rounded-2xl p-6 shadow-sm;
+    /* Uses tonal depth instead of lines */
+  }
+}
