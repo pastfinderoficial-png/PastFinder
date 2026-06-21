@@ -31,6 +31,7 @@ export function Auth() {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate('/feed');
       } else {
         if (!acceptedTerms) {
           throw new Error('Debes aceptar los Términos y Condiciones para registrarte.');
@@ -59,9 +60,15 @@ export function Auth() {
             user_id: data.user.id,
             display_name: email.split('@')[0],
           });
+          
+          notifications.show({
+            title: 'Registro exitoso',
+            message: 'Por favor, revisa tu bandeja de entrada y verifica tu correo para poder entrar.',
+            color: 'teal'
+          });
+          setIsLogin(true);
         }
       }
-      navigate('/feed');
     } catch (error) {
       notifications.show({
         title: 'Error',
