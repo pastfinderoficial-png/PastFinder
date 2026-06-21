@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mic, Square } from 'lucide-react';
 import { cn } from '../utils';
+import { notifications } from '@mantine/notifications';
 
 interface GiantRecordButtonProps {
   onRecordStart: () => void;
@@ -47,7 +48,11 @@ export function GiantRecordButton({ onRecordStart, onRecordStop, isRecording }: 
       onRecordStart();
     } catch (error) {
       console.error('Error al acceder al micrófono:', error);
-      alert('No se pudo acceder al micrófono. Por favor, revisa los permisos de tu navegador.');
+      notifications.show({
+        title: 'Micrófono no disponible',
+        message: 'No se pudo acceder al micrófono. Por favor, revisa los permisos de tu navegador.',
+        color: 'red'
+      });
     }
   };
 

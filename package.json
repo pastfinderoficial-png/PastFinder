@@ -10,6 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mantine/core": "^9.3.2",
+    "@mantine/hooks": "^9.3.2",
+    "@mantine/modals": "^9.3.2",
+    "@mantine/notifications": "^9.3.2",
+    "@mercadopago/sdk-react": "^1.0.7",
     "@supabase/supabase-js": "^2.105.4",
     "@tailwindcss/vite": "^4.3.0",
     "clsx": "^2.1.1",

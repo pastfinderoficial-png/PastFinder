@@ -4,14 +4,14 @@
   --font-inter: "Inter", sans-serif;
   --font-newsreader: "Newsreader", serif;
 
-  --color-cream: #FBFAEE;
+  --color-cream: #F4F0E6;
   --color-deep-navy: #0F172A;
   --color-heritage-gold: #D4AF37;
   --color-heritage-gold-dark: #b6962e;
   
   --color-surface-base: var(--color-cream);
-  --color-surface-elevated: #ffffff;
-  --color-surface-subtle: #f0efe3;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-subtle: #EAE5DA;
   --color-surface-navy: var(--color-deep-navy);
 
   --color-text-primary: var(--color-deep-navy);

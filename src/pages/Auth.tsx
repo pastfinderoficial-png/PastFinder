@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../services/supabase';
+import { notifications } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import {
   Mail,
@@ -26,6 +27,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { Provider } from '@supabase/supabase-js';
 import { PastFinderLogo } from '../components/PastFinderLogo';
 import { cn } from '../utils';
+import { openTermsModal } from '../components/TermsModal';
 
 type OAuthProvider = {
   provider: Provider;
@@ -57,6 +59,7 @@ export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
   const navigate = useNavigate();
@@ -70,6 +73,10 @@ export function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
+        if (!acceptedTerms) {
+          throw new Error('Debes aceptar los Términos y Condiciones para registrarte.');
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -97,7 +104,11 @@ export function Auth() {
       }
       navigate('/feed');
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'No se pudo completar el acceso.');
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'No se pudo completar el acceso.',
+        color: 'red'
+      });
     } finally {
       setLoading(false);
     }
@@ -116,9 +127,12 @@ export function Auth() {
 
     if (error) {
       setOauthLoading(null);
-      alert(
-        `No se pudo iniciar con ${provider}. Activa este proveedor en Supabase Dashboard > Authentication > Providers y revisa la Redirect URL.`,
-      );
+      notifications.show({
+        title: 'Error de proveedor',
+        message: `No se pudo iniciar con ${provider}. Activa este proveedor en Supabase Dashboard > Authentication > Providers y revisa la Redirect URL.`,
+        color: 'red',
+        autoClose: false
+      });
       return;
     }
 
@@ -194,6 +208,29 @@ export function Auth() {
               />
             </div>
 
+            {!isLogin && (
+              <div className="flex items-start gap-3 px-1 py-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-1 h-5 w-5 rounded border-deep-navy/20 text-heritage-gold focus:ring-heritage-gold accent-heritage-gold"
+                />
+                <label htmlFor="terms" className="text-sm text-deep-navy/80 leading-relaxed">
+                  He leído y acepto los{' '}
+                  <button
+                    type="button"
+                    onClick={openTermsModal}
+                    className="font-bold text-heritage-gold hover:underline"
+                  >
+                    Términos, Condiciones y Política de Privacidad
+                  </button>{' '}
+                  de Past Finder.
+                </label>
+              </div>
+            )}
+
             <button
               disabled={loading}
               className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-deep-navy px-6 text-lg font-bold text-cream transition-all hover:bg-deep-navy/90 disabled:opacity-50"
@@ -203,58 +240,6 @@ export function Auth() {
             </button>
           </form>
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-surface-subtle" />
-            <span className="text-xs font-bold uppercase tracking-widest text-deep-navy/40">o entra con</span>
-            <div className="h-px flex-1 bg-surface-subtle" />
-          </div>
-
-          <div className="grid gap-3">
-            {oauthProviders
-              .filter((item) => item.featured)
-              .map((item) => (
-                <OAuthButton
-                  key={item.provider}
-                  provider={item}
-                  loading={oauthLoading === item.provider}
-                  disabled={Boolean(oauthLoading)}
-                  onClick={() => void handleOAuth(item.provider)}
-                />
-              ))}
-          </div>
-
-          <p className="mt-3 rounded-xl bg-surface-subtle p-3 text-xs leading-5 text-deep-navy/55">
-            Si una red social muestra error, debes activarla antes en Supabase Authentication Providers.
-          </p>
-
-          <details className="mt-3 group">
-            <summary className="cursor-pointer list-none rounded-xl bg-surface-subtle px-4 py-3 text-center text-sm font-bold text-deep-navy/65 transition-colors hover:text-deep-navy">
-              Ver mas opciones de acceso
-            </summary>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {oauthProviders
-                .filter((item) => !item.featured)
-                .map((item) => (
-                  <OAuthButton
-                    key={item.provider}
-                    provider={item}
-                    compact
-                    loading={oauthLoading === item.provider}
-                    disabled={Boolean(oauthLoading)}
-                    onClick={() => void handleOAuth(item.provider)}
-                  />
-                ))}
-              <button
-                type="button"
-                disabled
-                title="Supabase no incluye Instagram como proveedor OAuth nativo en esta version. Usa Facebook/Meta o un proveedor custom."
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-surface-subtle px-3 text-sm font-bold text-deep-navy/30"
-              >
-                <Users size={17} />
-                Instagram
-              </button>
-            </div>
-          </details>
 
           <button
             onClick={() => setIsLogin((value) => !value)}

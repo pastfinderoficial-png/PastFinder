@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../services/supabase';
+import { notifications } from '@mantine/notifications';
+import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
+
+initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, { locale: 'es-PE' });
 import { AudioPlayer } from '../components/AudioPlayer';
 import {
   Search,
@@ -76,6 +80,8 @@ export function Feed() {
   const [newCommentByPost, setNewCommentByPost] = useState<Record<string, string>>({});
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('all');
+  const [preferenceId, setPreferenceId] = useState<string | null>(null);
+  const [subscribingCreatorId, setSubscribingCreatorId] = useState<string | null>(null);
 
   useEffect(() => {
     async function initFeed() {
@@ -227,22 +233,28 @@ export function Feed() {
   const handleSubscribe = async (creatorId: string) => {
     if (!currentUser || currentUser.id === creatorId) return;
 
-    const currentPeriodEnd = new Date();
-    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
+    setSubscribingCreatorId(creatorId);
 
-    const { error } = await supabase.from('subscriptions').upsert({
-      fan_id: currentUser.id,
-      creator_id: creatorId,
-      status: 'active',
-      current_period_end: currentPeriodEnd.toISOString(),
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('create-preference', {
+        body: { creator_id: creatorId, fan_id: currentUser.id },
+      });
 
-    if (error) {
-      alert(error.message);
-      return;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.preferenceId) {
+        setPreferenceId(data.preferenceId);
+      }
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: 'Error al procesar la suscripción: ' + (error instanceof Error ? error.message : 'Desconocido'),
+        color: 'red'
+      });
+    } finally {
+      setSubscribingCreatorId(null);
     }
-
-    alert('Suscripcion gratuita activada. Ya formas parte de la comunidad del creador.');
   };
 
   return (
@@ -359,6 +371,32 @@ export function Feed() {
           </div>
         </aside>
       </div>
+
+      {preferenceId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-navy/80 p-4">
+          <div className="relative w-full max-w-md rounded-3xl bg-cream p-8 shadow-xl">
+            <button
+              onClick={() => {
+                setPreferenceId(null);
+                setSubscribingCreatorId(null);
+              }}
+              className="absolute right-6 top-6 text-deep-navy/50 hover:text-deep-navy"
+            >
+              Cerrar
+            </button>
+            <h2 className="mb-2 text-2xl font-bold text-deep-navy">Completar Suscripcion</h2>
+            <p className="mb-6 text-sm text-deep-navy/70">
+              Elige tu metodo de pago seguro con Mercado Pago.
+            </p>
+            <div className="min-h-[300px]">
+              <Wallet
+                initialization={{ preferenceId }}
+                customization={{ texts: { valueProp: 'security_safety' } }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -421,7 +459,7 @@ function PostArticle({
               className="hidden min-h-10 items-center gap-2 rounded-full bg-heritage-gold px-4 text-xs font-bold text-deep-navy transition-all hover:bg-heritage-gold-dark sm:inline-flex"
             >
               <Crown size={16} />
-              Suscribirme gratis
+              Suscribirme
             </button>
             <button
               onClick={() => onFollow(post.creator_id)}

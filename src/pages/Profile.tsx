@@ -12,8 +12,11 @@ import {
   Save,
   X,
   MapPin,
+  Wallet,
+  DollarSign,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { notifications } from '@mantine/notifications';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { supabase } from '../services/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -57,6 +60,8 @@ export function Profile() {
   const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
+  const [earnings, setEarnings] = useState(0);
 
   const navigate = useNavigate();
 
@@ -68,13 +73,17 @@ export function Profile() {
       if (user) {
         setCurrentUser(user);
 
-        const [{ data: creatorData }, { data: postData }] = await Promise.all([
+        const [{ data: creatorData }, { data: postData }, { data: earningsData }] = await Promise.all([
           supabase.from('creators').select('*').eq('user_id', user.id).maybeSingle(),
           supabase.from('posts').select('*').eq('creator_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('earnings').select('net_amount').eq('creator_id', user.id).eq('status', 'available'),
         ]);
 
         setCreator((creatorData as CreatorProfile | null) || null);
         setPosts((postData || []) as ProfilePost[]);
+        
+        const totalEarnings = earningsData?.reduce((acc, curr) => acc + Number(curr.net_amount), 0) || 0;
+        setEarnings(totalEarnings);
       }
 
       setLoading(false);
@@ -105,6 +114,7 @@ export function Profile() {
     country: creator?.location_country || '',
     latitude: creator?.latitude ?? null,
     longitude: creator?.longitude ?? null,
+    monthly_price: creator?.monthly_price ?? 0,
   };
 
   const visiblePosts = posts.filter((post) => {
@@ -155,11 +165,18 @@ export function Profile() {
               <div className="mt-5 flex flex-wrap gap-3">
                 <span className="inline-flex min-h-10 items-center gap-2 rounded-full bg-cream px-4 text-sm font-bold text-deep-navy">
                   <Users size={16} />
-                  Suscripcion gratis
+                  {Number(profile.monthly_price) > 0 ? `Suscripción: S/ ${profile.monthly_price}` : 'Suscripción gratis'}
                 </span>
                 <button className="inline-flex min-h-10 items-center gap-2 rounded-full bg-heritage-gold px-4 text-sm font-bold text-deep-navy">
                   <Crown size={16} />
                   Vista creador
+                </button>
+                <button 
+                  onClick={() => setShowWallet(true)}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-full bg-deep-navy px-4 text-sm font-bold text-cream border border-heritage-gold/30 hover:bg-heritage-gold hover:text-deep-navy transition-colors"
+                >
+                  <Wallet size={16} />
+                  Billetera
                 </button>
                 {(profile.city || profile.country) && (
                   <span className="inline-flex min-h-10 items-center gap-2 rounded-full bg-cream/10 px-4 text-sm font-bold text-cream">
@@ -210,6 +227,111 @@ export function Profile() {
           onSaved={handleProfileSaved}
         />
       )}
+
+      {showWallet && currentUser && (
+        <WalletModal 
+          user={currentUser} 
+          earnings={earnings} 
+          onClose={() => setShowWallet(false)} 
+        />
+      )}
+    </div>
+  );
+}
+
+function WalletModal({
+  user,
+  earnings,
+  onClose,
+}: {
+  user: User;
+  earnings: number;
+  onClose: () => void;
+}) {
+  const [amount, setAmount] = useState(String(earnings));
+  const [payoutMethod, setPayoutMethod] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleRequest = async () => {
+    if (Number(amount) <= 0 || Number(amount) > earnings) {
+      notifications.show({ title: 'Error', message: 'Monto inválido. No puede ser mayor a tus ganancias disponibles.', color: 'red' });
+      return;
+    }
+    if (!payoutMethod.trim()) {
+      notifications.show({ title: 'Error', message: 'Por favor indica un método de pago (ej. número de cuenta o correo de Mercado Pago).', color: 'red' });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('withdrawals').insert({
+        creator_id: user.id,
+        amount: Number(amount),
+        payout_method: payoutMethod.trim(),
+        status: 'pending',
+      });
+
+      if (error) throw error;
+      notifications.show({ title: 'Solicitud enviada', message: 'Solicitud de retiro enviada. El administrador procesará tu pago.', color: 'green' });
+      onClose();
+    } catch (error) {
+      notifications.show({ title: 'Error', message: 'Error al enviar la solicitud: ' + (error instanceof Error ? error.message : 'Desconocido'), color: 'red' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-deep-navy/80 p-4">
+      <div className="w-full max-w-md rounded-3xl bg-cream p-8 shadow-xl relative">
+        <button onClick={onClose} className="absolute right-6 top-6 text-deep-navy/50 hover:text-deep-navy">
+          <X size={20} />
+        </button>
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-heritage-gold text-deep-navy">
+            <DollarSign size={24} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-deep-navy">Tu Billetera</h2>
+            <p className="text-sm font-bold text-heritage-gold">Ganancias Disponibles</p>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl bg-surface-subtle p-6 text-center">
+          <span className="text-5xl font-bold text-deep-navy">S/ {earnings.toFixed(2)}</span>
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-bold uppercase tracking-widest text-deep-navy/60">
+            Monto a Retirar
+            <input
+              type="number"
+              max={earnings}
+              min="0"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="mt-2 min-h-12 w-full rounded-xl bg-surface-subtle px-4 text-deep-navy outline-none focus:ring-2 focus:ring-heritage-gold"
+            />
+          </label>
+          <label className="block text-sm font-bold uppercase tracking-widest text-deep-navy/60">
+            Cuenta Bancaria o Correo
+            <textarea
+              rows={2}
+              value={payoutMethod}
+              onChange={(e) => setPayoutMethod(e.target.value)}
+              placeholder="Ej: BCP: 123-456-789 a nombre de Juan Perez"
+              className="mt-2 w-full resize-none rounded-xl bg-surface-subtle p-4 text-deep-navy outline-none focus:ring-2 focus:ring-heritage-gold"
+            />
+          </label>
+          <button
+            onClick={handleRequest}
+            disabled={submitting || earnings <= 0}
+            className="mt-4 flex w-full min-h-12 items-center justify-center gap-2 rounded-xl bg-deep-navy font-bold text-cream hover:bg-deep-navy/90 disabled:opacity-50"
+          >
+            {submitting ? 'Enviando...' : 'Solicitar Retiro'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -231,6 +353,7 @@ function EditProfileModal({
     country: string;
     latitude: number | null;
     longitude: number | null;
+    monthly_price: number | string;
   };
   creator: CreatorProfile | null;
   onClose: () => void;
@@ -240,6 +363,7 @@ function EditProfileModal({
   const [bio, setBio] = useState(profile.bio);
   const [city, setCity] = useState(profile.city);
   const [country, setCountry] = useState(profile.country);
+  const [monthlyPrice, setMonthlyPrice] = useState(String(profile.monthly_price));
   const [latitude, setLatitude] = useState<number | null>(profile.latitude);
   const [longitude, setLongitude] = useState<number | null>(profile.longitude);
   const [locationStatus, setLocationStatus] = useState('Agrega ciudad o usa ubicacion aproximada.');
@@ -269,7 +393,7 @@ function EditProfileModal({
         user_id: user.id,
         display_name: displayName.trim() || user.email?.split('@')[0] || 'Creador',
         bio: bio.trim() || defaultBio,
-        monthly_price: 0,
+        monthly_price: Number(monthlyPrice) || 0,
         profile_image_url: profileImageUrl,
         cover_image_url: coverImageUrl,
         location_city: city.trim() || null,
@@ -288,9 +412,10 @@ function EditProfileModal({
         },
       });
 
+      notifications.show({ title: 'Perfil guardado', message: 'Tus cambios se han guardado exitosamente.', color: 'green' });
       onSaved((data as CreatorProfile) || updatedProfile);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'No se pudo guardar el perfil.');
+      notifications.show({ title: 'Error', message: error instanceof Error ? error.message : 'No se pudo guardar el perfil.', color: 'red' });
     } finally {
       setSaving(false);
     }
@@ -352,12 +477,24 @@ function EditProfileModal({
           </div>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <label className="text-sm font-bold uppercase tracking-widest text-deep-navy/60">
             Nombre publico
             <input
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
+              className="mt-2 min-h-12 w-full rounded-xl bg-surface-subtle px-4 text-base font-normal normal-case tracking-normal text-deep-navy outline-none focus:ring-2 focus:ring-heritage-gold"
+            />
+          </label>
+          <label className="text-sm font-bold uppercase tracking-widest text-deep-navy/60">
+            Precio Suscripción (Mensual)
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={monthlyPrice}
+              onChange={(event) => setMonthlyPrice(event.target.value)}
+              placeholder="0.00"
               className="mt-2 min-h-12 w-full rounded-xl bg-surface-subtle px-4 text-base font-normal normal-case tracking-normal text-deep-navy outline-none focus:ring-2 focus:ring-heritage-gold"
             />
           </label>
