@@ -9,51 +9,11 @@ import {
   ShieldCheck,
   HeartHandshake,
   Video,
-  Apple,
-  Music2,
-  MessageCircle,
-  BriefcaseBusiness,
-  Gamepad2,
-  KeyRound,
-  Cloud,
-  Sparkles,
-  Search,
-  Users,
-  Code2,
-  Workflow,
-  Boxes,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { Provider } from '@supabase/supabase-js';
 import { PastFinderLogo } from '../components/PastFinderLogo';
-import { cn } from '../utils';
 import { openTermsModal } from '../components/TermsModal';
 
-type OAuthProvider = {
-  provider: Provider;
-  label: string;
-  icon: LucideIcon;
-  featured?: boolean;
-};
-
-const oauthProviders: OAuthProvider[] = [
-  { provider: 'google', label: 'Google', icon: Search, featured: true },
-  { provider: 'facebook', label: 'Facebook', icon: Users, featured: true },
-  { provider: 'apple', label: 'Apple', icon: Apple, featured: true },
-  { provider: 'github', label: 'GitHub', icon: Code2 },
-  { provider: 'gitlab', label: 'GitLab', icon: BriefcaseBusiness },
-  { provider: 'discord', label: 'Discord', icon: Gamepad2 },
-  { provider: 'azure', label: 'Microsoft', icon: Cloud },
-  { provider: 'linkedin_oidc', label: 'LinkedIn', icon: BriefcaseBusiness },
-  { provider: 'slack_oidc', label: 'Slack', icon: Workflow },
-  { provider: 'twitch', label: 'Twitch', icon: Video },
-  { provider: 'spotify', label: 'Spotify', icon: Music2 },
-  { provider: 'notion', label: 'Notion', icon: Sparkles },
-  { provider: 'figma', label: 'Figma', icon: Boxes },
-  { provider: 'bitbucket', label: 'Bitbucket', icon: BriefcaseBusiness },
-  { provider: 'kakao', label: 'Kakao', icon: MessageCircle },
-  { provider: 'keycloak', label: 'Keycloak', icon: KeyRound },
-];
 
 export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -61,7 +21,6 @@ export function Auth() {
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
   const navigate = useNavigate();
 
   const handleAuth = async (event: React.FormEvent) => {
@@ -114,35 +73,6 @@ export function Auth() {
     }
   };
 
-  const handleOAuth = async (provider: Provider) => {
-    setOauthLoading(provider);
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/feed`,
-        skipBrowserRedirect: true,
-      },
-    });
-
-    if (error) {
-      setOauthLoading(null);
-      notifications.show({
-        title: 'Error de proveedor',
-        message: `No se pudo iniciar con ${provider}. Activa este proveedor en Supabase Dashboard > Authentication > Providers y revisa la Redirect URL.`,
-        color: 'red',
-        autoClose: false
-      });
-      return;
-    }
-
-    if (data.url) {
-      window.location.assign(data.url);
-      return;
-    }
-
-    setOauthLoading(null);
-  };
 
   return (
     <div className="min-h-screen bg-cream md:grid md:grid-cols-[1.05fr_0.95fr]">
@@ -253,36 +183,6 @@ export function Auth() {
   );
 }
 
-function OAuthButton({
-  provider,
-  loading,
-  disabled,
-  compact = false,
-  onClick,
-}: {
-  provider: OAuthProvider;
-  loading: boolean;
-  disabled: boolean;
-  compact?: boolean;
-  onClick: () => void;
-}) {
-  const Icon = provider.icon;
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-xl bg-surface-subtle font-bold text-deep-navy transition-all hover:bg-surface-elevated hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50',
-        compact ? 'min-h-11 px-3 text-sm' : 'min-h-12 px-4',
-      )}
-    >
-      <Icon size={compact ? 17 : 20} />
-      {loading ? 'Conectando...' : provider.label}
-    </button>
-  );
-}
 
 function Feature({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (

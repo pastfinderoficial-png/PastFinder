@@ -81,7 +81,6 @@ export function Feed() {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('all');
   const [preferenceId, setPreferenceId] = useState<string | null>(null);
-  const [subscribingCreatorId, setSubscribingCreatorId] = useState<string | null>(null);
 
   useEffect(() => {
     async function initFeed() {
@@ -233,8 +232,6 @@ export function Feed() {
   const handleSubscribe = async (creatorId: string) => {
     if (!currentUser || currentUser.id === creatorId) return;
 
-    setSubscribingCreatorId(creatorId);
-
     try {
       const { data, error } = await supabase.functions.invoke('create-preference', {
         body: { creator_id: creatorId, fan_id: currentUser.id },
@@ -252,8 +249,6 @@ export function Feed() {
         message: 'Error al procesar la suscripción: ' + (error instanceof Error ? error.message : 'Desconocido'),
         color: 'red'
       });
-    } finally {
-      setSubscribingCreatorId(null);
     }
   };
 
@@ -378,7 +373,6 @@ export function Feed() {
             <button
               onClick={() => {
                 setPreferenceId(null);
-                setSubscribingCreatorId(null);
               }}
               className="absolute right-6 top-6 text-deep-navy/50 hover:text-deep-navy"
             >
@@ -391,7 +385,6 @@ export function Feed() {
             <div className="min-h-[300px]">
               <Wallet
                 initialization={{ preferenceId }}
-                customization={{ texts: { valueProp: 'security_safety' } }}
               />
             </div>
           </div>
