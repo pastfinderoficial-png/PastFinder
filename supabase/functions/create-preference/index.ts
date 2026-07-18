@@ -8,9 +8,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Se inicializa con el token de acceso seguro
-// Fallback en duro para desarrollo si la env var no está (NO recomendado en prod, pero útil para MVP local)
-const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN") || "APP_USR-780169382214975-060322-0b0b85480ad78f811216d3d21e002fd2-3138432350";
+// El token de acceso se lee únicamente desde el secret MP_ACCESS_TOKEN
+// (nunca hardcodeado en el código, para evitar exponerlo en el control de versiones).
+const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN");
+if (!mpAccessToken) {
+  throw new Error("Falta configurar el secret MP_ACCESS_TOKEN en el proyecto de Supabase.");
+}
 const mpClient = new MercadoPagoConfig({ accessToken: mpAccessToken });
 
 export default {
@@ -55,6 +58,7 @@ export default {
               title: `Suscripción Mensual - ${creator.display_name}`,
               quantity: 1,
               unit_price: price,
+              currency_id: 'CLP',
             }
           ],
           metadata: {

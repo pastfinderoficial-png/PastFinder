@@ -1,88 +1,89 @@
-import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './services/supabase';
-import type { Session } from '@supabase/supabase-js';
-import { Feed } from './pages/Feed';
-import { Studio } from './pages/Studio';
-import { Auth } from './pages/Auth';
-import { Profile } from './pages/Profile';
-import { Discover } from './pages/Discover';
-import { Admin } from './pages/Admin';
-import { Navigation } from './components/Navigation';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
 
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { FullScreenSpinner } from './components/FullScreenSpinner';
+import { Navigation } from './components/Navigation';
+
+import { Home } from './pages/Home';
+import { Auth } from './pages/Auth';
+import { Explorar } from './pages/Explorar';
+import { Categorias } from './pages/Categorias';
+import { Historias } from './pages/Historias';
+import { HistoriaDetail } from './pages/HistoriaDetail';
+import { AutorPublico } from './pages/AutorPublico';
+import { Planes } from './pages/Planes';
+import { About } from './pages/About';
+import { Contacto } from './pages/Contacto';
+import { Profile } from './pages/Profile';
+import { ProfileSettings } from './pages/ProfileSettings';
+import { MisHistorias } from './pages/MisHistorias';
+import { Favoritos } from './pages/Favoritos';
+import { Dashboard } from './pages/Dashboard';
+import { Subscripcion } from './pages/Subscripcion';
+import { Checkout } from './pages/Checkout';
+import { Studio } from './pages/Studio';
+import { Admin } from './pages/Admin';
+
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
-function App() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+function AppShell() {
+  const { loading } = useAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+  if (loading) return <FullScreenSpinner />;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen bg-surface-base text-deep-navy pb-20 md:pb-0 font-inter transition-colors duration-300">
+        <Navigation />
 
-    return () => subscription.unsubscribe();
-  }, []);
+        <main className="md:mt-20 min-h-screen transition-all duration-300">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Auth mode="login" />} />
+            <Route path="/registro" element={<Auth mode="register" />} />
+            <Route path="/explorar" element={<Explorar />} />
+            <Route path="/categorias" element={<Categorias />} />
+            <Route path="/historias" element={<Historias />} />
+            <Route path="/historia/:id" element={<HistoriaDetail />} />
+            <Route path="/autor/:id" element={<AutorPublico />} />
+            <Route path="/planes" element={<Planes />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contacto" element={<Contacto />} />
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-cream">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-heritage-gold border-t-transparent" />
+            {/* Protected routes */}
+            <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/configuracion" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+            <Route path="/mis-historias" element={<ProtectedRoute><MisHistorias /></ProtectedRoute>} />
+            <Route path="/favoritos" element={<ProtectedRoute><Favoritos /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/subscripcion" element={<ProtectedRoute><Subscripcion /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/studio" element={<ProtectedRoute><Studio /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
       </div>
-    );
-  }
+    </BrowserRouter>
+  );
+}
 
+function App() {
   return (
     <MantineProvider defaultColorScheme="light">
       <Notifications position="top-right" zIndex={1000} />
-      <ModalsProvider>
-        <BrowserRouter>
-          <div className="min-h-screen bg-surface-base text-deep-navy pb-20 md:pb-0 font-inter transition-colors duration-300">
-            {session && <Navigation />}
-            
-            <main className="md:ml-20 min-h-screen transition-all duration-300">
-              <Routes>
-                <Route 
-                  path="/" 
-                  element={session ? <Navigate to="/feed" replace /> : <Auth />} 
-                />
-                <Route 
-                  path="/feed" 
-                  element={session ? <Feed /> : <Navigate to="/" replace />} 
-                />
-                <Route 
-                  path="/discover" 
-                  element={session ? <Discover /> : <Navigate to="/" replace />} 
-                />
-                <Route 
-                  path="/studio" 
-                  element={session ? <Studio /> : <Navigate to="/" replace />} 
-                />
-                <Route 
-                  path="/profile" 
-                  element={session ? <Profile /> : <Navigate to="/" replace />} 
-                />
-                <Route 
-                  path="/admin" 
-                  element={session ? <Admin /> : <Navigate to="/" replace />} 
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-          </div>
-        </BrowserRouter>
-      </ModalsProvider>
+      <AuthProvider>
+        <ModalsProvider>
+          <AppShell />
+        </ModalsProvider>
+      </AuthProvider>
     </MantineProvider>
   );
 }

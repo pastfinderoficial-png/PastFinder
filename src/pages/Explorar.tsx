@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { notifications } from '@mantine/notifications';
-import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
+import { useAuth } from '../context/AuthContext';
+import { requireAuth } from '../utils/requireAuth';
 
-initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, { locale: 'es-PE' });
 import { AudioPlayer } from '../components/AudioPlayer';
+import { ExpandableText } from '../components/ExpandableText';
 import {
   Search,
   MessageSquare,
@@ -70,33 +71,37 @@ const filters: Array<{ id: FeedFilter; label: string; icon: LucideIcon }> = [
   { id: 'following', label: 'Siguiendo', icon: UserCheck },
 ];
 
-export function Feed() {
+export function Explorar() {
+  const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [following, setFollowing] = useState<string[]>([]);
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [favoritedPosts, setFavoritedPosts] = useState<string[]>([]);
   const [showComments, setShowComments] = useState<string | null>(null);
   const [newCommentByPost, setNewCommentByPost] = useState<Record<string, string>>({});
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('all');
-  const [preferenceId, setPreferenceId] = useState<string | null>(null);
 
   useEffect(() => {
     async function initFeed() {
       setLoading(true);
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
-      setCurrentUser(user ? { id: user.id } : null);
 
-      if (user) {
-        const [{ data: follows }, { data: likes }] = await Promise.all([
-          supabase.from('follows').select('following_id').eq('follower_id', user.id),
-          supabase.from('likes').select('post_id').eq('user_id', user.id),
+      if (currentUser) {
+        const [{ data: follows }, { data: likes }, { data: favorites }] = await Promise.all([
+          supabase.from('follows').select('following_id').eq('follower_id', currentUser.id),
+          supabase.from('likes').select('post_id').eq('user_id', currentUser.id),
+          supabase.from('favorites').select('post_id').eq('user_id', currentUser.id),
         ]);
 
         setFollowing(follows?.map((follow) => follow.following_id) || []);
         setLikedPosts(likes?.map((like) => like.post_id) || []);
+        setFavoritedPosts(favorites?.map((favorite) => favorite.post_id) || []);
+      } else {
+        setFollowing([]);
+        setLikedPosts([]);
+        setFavoritedPosts([]);
       }
 
       const { data, error } = await supabase
@@ -108,7 +113,7 @@ export function Feed() {
           display_name,
           bio,
           profile_image_url,
-          users ( email, id )
+          users!creators_user_id_fkey ( email, id )
         ),
           comments (
             id,
@@ -128,7 +133,7 @@ export function Feed() {
     }
 
     void initFeed();
-  }, []);
+  }, [currentUser]);
 
   const filteredPosts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -159,7 +164,8 @@ export function Feed() {
   }, [activeFilter, following, posts, query]);
 
   const handleFollow = async (creatorId: string) => {
-    if (!currentUser || currentUser.id === creatorId) return;
+    if (!requireAuth(currentUser, navigate, 'Regístrate para seguir a este narrador.')) return;
+    if (currentUser.id === creatorId) return;
 
     if (following.includes(creatorId)) {
       await supabase
@@ -178,7 +184,7 @@ export function Feed() {
   };
 
   const handleLike = async (postId: string) => {
-    if (!currentUser) return;
+    if (!requireAuth(currentUser, navigate, 'Regístrate para dar Me gusta.')) return;
 
     if (likedPosts.includes(postId)) {
       await supabase.from('likes').delete().eq('user_id', currentUser.id).eq('post_id', postId);
@@ -203,8 +209,20 @@ export function Feed() {
     }
   };
 
+  const handleFavorite = async (postId: string) => {
+    if (!requireAuth(currentUser, navigate, 'Regístrate para guardar historias en favoritos.')) return;
+
+    if (favoritedPosts.includes(postId)) {
+      await supabase.from('favorites').delete().eq('user_id', currentUser.id).eq('post_id', postId);
+      setFavoritedPosts((prev) => prev.filter((id) => id !== postId));
+    } else {
+      await supabase.from('favorites').insert({ user_id: currentUser.id, post_id: postId });
+      setFavoritedPosts((prev) => [...prev, postId]);
+    }
+  };
+
   const handleAddComment = async (postId: string) => {
-    if (!currentUser) return;
+    if (!requireAuth(currentUser, navigate, 'Regístrate para comentar.')) return;
 
     const content = newCommentByPost[postId]?.trim();
     if (!content) return;
@@ -229,27 +247,11 @@ export function Feed() {
     }
   };
 
-  const handleSubscribe = async (creatorId: string) => {
-    if (!currentUser || currentUser.id === creatorId) return;
+  const handleSubscribe = (creatorId: string) => {
+    if (!requireAuth(currentUser, navigate, 'Regístrate o inicia sesión para suscribirte.')) return;
+    if (currentUser.id === creatorId) return;
 
-    try {
-      const { data, error } = await supabase.functions.invoke('create-preference', {
-        body: { creator_id: creatorId, fan_id: currentUser.id },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      if (data?.preferenceId) {
-        setPreferenceId(data.preferenceId);
-      }
-    } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: 'Error al procesar la suscripción: ' + (error instanceof Error ? error.message : 'Desconocido'),
-        color: 'red'
-      });
-    }
+    navigate(`/checkout?creator=${creatorId}`);
   };
 
   return (
@@ -334,10 +336,12 @@ export function Feed() {
                 currentUserId={currentUser?.id}
                 isFollowing={following.includes(post.creator_id)}
                 isLiked={likedPosts.includes(post.id)}
+                isFavorited={favoritedPosts.includes(post.id)}
                 commentValue={newCommentByPost[post.id] || ''}
                 showComments={showComments === post.id}
                 onFollow={handleFollow}
                 onLike={handleLike}
+                onFavorite={handleFavorite}
                 onToggleComments={() => setShowComments(showComments === post.id ? null : post.id)}
                 onCommentChange={(value) => setNewCommentByPost((prev) => ({ ...prev, [post.id]: value }))}
                 onAddComment={handleAddComment}
@@ -361,35 +365,12 @@ export function Feed() {
             <Lock className="mb-3" size={28} />
             <h2 className="mb-2 text-2xl font-bold">Modelo premium</h2>
             <p className="text-sm leading-6">
-              Los creadores pueden publicar para todos o para miembros gratuitos.
+              Los creadores pueden publicar para todos o exclusivo para sus suscriptores premium.
             </p>
           </div>
         </aside>
       </div>
 
-      {preferenceId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-navy/80 p-4">
-          <div className="relative w-full max-w-md rounded-3xl bg-cream p-8 shadow-xl">
-            <button
-              onClick={() => {
-                setPreferenceId(null);
-              }}
-              className="absolute right-6 top-6 text-deep-navy/50 hover:text-deep-navy"
-            >
-              Cerrar
-            </button>
-            <h2 className="mb-2 text-2xl font-bold text-deep-navy">Completar Suscripcion</h2>
-            <p className="mb-6 text-sm text-deep-navy/70">
-              Elige tu metodo de pago seguro con Mercado Pago.
-            </p>
-            <div className="min-h-[300px]">
-              <Wallet
-                initialization={{ preferenceId }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -401,8 +382,10 @@ function PostArticle({
   isLiked,
   commentValue,
   showComments,
+  isFavorited,
   onFollow,
   onLike,
+  onFavorite,
   onToggleComments,
   onCommentChange,
   onAddComment,
@@ -412,10 +395,12 @@ function PostArticle({
   currentUserId?: string;
   isFollowing: boolean;
   isLiked: boolean;
+  isFavorited: boolean;
   commentValue: string;
   showComments: boolean;
   onFollow: (creatorId: string) => void;
   onLike: (postId: string) => void;
+  onFavorite: (postId: string) => void;
   onToggleComments: () => void;
   onCommentChange: (value: string) => void;
   onAddComment: (postId: string) => void;
@@ -474,8 +459,8 @@ function PostArticle({
 
       <div className="px-5 pb-5">
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          {post.is_sub_only && <Badge label="Suscriptores" />}
-          {post.is_ppv && <Badge label="Miembros gratis" />}
+          {post.is_sub_only && <Badge label="Premium" />}
+          {post.is_ppv && <Badge label="Premium" />}
           {isTextPost && <Badge label="Relato" />}
           {post.media_type === 'audio' && <Badge label="Audio" />}
           {post.media_type === 'video' && <Badge label="Video corto" />}
@@ -486,9 +471,10 @@ function PostArticle({
         {post.description && <p className="mb-4 text-deep-navy/70">{post.description}</p>}
 
         {post.text_content && (
-          <div className="mb-4 rounded-xl bg-cream/60 p-5 text-lg leading-8 text-deep-navy/80 whitespace-pre-wrap">
-            {post.text_content}
-          </div>
+          <ExpandableText
+            text={post.text_content}
+            className="mb-4 rounded-xl bg-cream/60 p-5 text-lg leading-8 text-deep-navy/80 whitespace-pre-wrap"
+          />
         )}
 
         {post.media_type === 'audio' && post.media_url && (
@@ -543,6 +529,16 @@ function PostArticle({
               Suscribirme
             </button>
           )}
+          <button
+            onClick={() => onFavorite(post.id)}
+            aria-label="Guardar en favoritos"
+            className={cn(
+              'transition-colors',
+              isFavorited ? 'text-heritage-gold' : 'text-deep-navy/45 hover:text-heritage-gold',
+            )}
+          >
+            <Heart size={22} fill={isFavorited ? 'currentColor' : 'none'} />
+          </button>
           <button className="text-deep-navy/45 transition-colors hover:text-heritage-gold">
             <Share2 size={22} />
           </button>

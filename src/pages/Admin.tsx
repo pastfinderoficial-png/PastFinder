@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { notifications } from '@mantine/notifications';
+import { useAuth } from '../context/AuthContext';
+import { formatCLP } from '../utils/currency';
 
 type Withdrawal = {
   id: string;
@@ -26,32 +28,19 @@ type AppUser = {
 };
 
 export function Admin() {
+  const { isAdmin, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'retiros' | 'usuarios'>('retiros');
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [usersList, setUsersList] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    async function checkAdminAndLoadData() {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+    async function loadData() {
+      if (authLoading) return;
 
-      // Check if user is admin
-      if (userData.user.email === 'pastfinder.oficial@gmail.com') {
-        setIsAdmin(true);
-      } else {
-        const { data: userRecord } = await supabase
-          .from('users')
-          .select('is_admin')
-          .eq('id', userData.user.id)
-          .single();
-
-        if (!userRecord?.is_admin) {
-          setLoading(false);
-          return;
-        }
-        setIsAdmin(true);
+      if (!isAdmin) {
+        setLoading(false);
+        return;
       }
 
       const { data: withdrawalsData } = await supabase
@@ -60,7 +49,7 @@ export function Admin() {
           *,
           creators (
             display_name,
-            users ( email )
+            users!creators_user_id_fkey ( email )
           )
         `)
         .order('created_at', { ascending: false });
@@ -81,8 +70,8 @@ export function Admin() {
       setLoading(false);
     }
 
-    void checkAdminAndLoadData();
-  }, []);
+    void loadData();
+  }, [authLoading, isAdmin]);
 
   const handleUpdateStatus = async (id: string, newStatus: 'completed' | 'failed') => {
     try {
@@ -184,7 +173,7 @@ export function Admin() {
                         <div className="text-xs text-deep-navy/60">{withdrawal.creators.users.email}</div>
                       </td>
                       <td className="px-6 py-4 font-bold text-heritage-gold">
-                        S/ {withdrawal.amount.toFixed(2)}
+                        {formatCLP(withdrawal.amount)}
                       </td>
                       <td className="px-6 py-4">{withdrawal.payout_method}</td>
                       <td className="px-6 py-4">
