@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Compass, FileText, MapPin, Mic, Search, Sparkles, Video } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { cn } from '../utils';
 
-type DiscoverPost = {
+type HistoriaPost = {
   id: string;
   title: string;
   description?: string | null;
@@ -18,6 +19,7 @@ type DiscoverPost = {
     location_country?: string | null;
     latitude?: number | null;
     longitude?: number | null;
+    user_id?: string | null;
     users?: { email?: string | null } | null;
   } | null;
 };
@@ -34,12 +36,13 @@ const contentTypes = [
   { id: 'video', label: 'Videos', icon: Video },
 ];
 
-export function Discover() {
-  const [posts, setPosts] = useState<DiscoverPost[]>([]);
+export function Historias() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [posts, setPosts] = useState<HistoriaPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const categoryFilter = searchParams.get('categoria') || 'all';
   const [memberOnly, setMemberOnly] = useState(false);
   const [cityFilter, setCityFilter] = useState('');
   const [radiusKm, setRadiusKm] = useState(100);
@@ -59,18 +62,19 @@ export function Discover() {
           is_sub_only,
           created_at,
           creators (
+            user_id,
             display_name,
             profile_image_url,
             location_city,
             location_country,
             latitude,
             longitude,
-            users ( email )
+            users!creators_user_id_fkey ( email )
           )
         `)
         .order('created_at', { ascending: false });
 
-      setPosts((data || []) as DiscoverPost[]);
+      setPosts((data || []) as HistoriaPost[]);
       setLoading(false);
     }
 
@@ -191,7 +195,9 @@ export function Discover() {
               Categoria
               <select
                 value={categoryFilter}
-                onChange={(event) => setCategoryFilter(event.target.value)}
+                onChange={(event) => {
+                  setSearchParams(event.target.value === 'all' ? {} : { categoria: event.target.value });
+                }}
                 className="mt-2 min-h-12 w-full rounded-xl bg-surface-subtle px-3 text-base font-normal normal-case tracking-normal text-deep-navy outline-none focus:ring-2 focus:ring-heritage-gold"
               >
                 <option value="all">Todas</option>
@@ -220,7 +226,7 @@ export function Discover() {
             </label>
 
             <label className="mb-4 flex min-h-12 items-center justify-between rounded-xl bg-surface-subtle px-3 font-bold text-deep-navy">
-              Solo miembros gratis
+              Solo contenido premium
               <input type="checkbox" checked={memberOnly} onChange={(event) => setMemberOnly(event.target.checked)} />
             </label>
 
@@ -279,9 +285,9 @@ export function Discover() {
   );
 }
 
-function RecommendationCard({ post, distance }: { post: DiscoverPost; distance: number | null }) {
+function RecommendationCard({ post, distance }: { post: HistoriaPost; distance: number | null }) {
   return (
-    <article className="rounded-xl bg-surface-subtle p-4">
+    <Link to={`/historia/${post.id}`} className="block rounded-xl bg-surface-subtle p-4 transition-shadow hover:shadow-sm">
       <div className="mb-3 flex items-center gap-3">
         <img src={getAvatar(post)} alt={getCreatorName(post)} className="h-10 w-10 rounded-full object-cover" />
         <div className="min-w-0">
@@ -291,22 +297,22 @@ function RecommendationCard({ post, distance }: { post: DiscoverPost; distance: 
       </div>
       <p className="mb-2 text-lg font-bold text-deep-navy">{post.title}</p>
       <Badge label={post.category || post.media_type} />
-    </article>
+    </Link>
   );
 }
 
-function ResultRow({ post, distance }: { post: DiscoverPost; distance: number | null }) {
+function ResultRow({ post, distance }: { post: HistoriaPost; distance: number | null }) {
   const Icon = post.media_type === 'audio' ? Mic : post.media_type === 'video' ? Video : FileText;
 
   return (
-    <article className="flex items-start gap-4 rounded-2xl bg-surface-elevated p-4 shadow-sm">
+    <Link to={`/historia/${post.id}`} className="flex items-start gap-4 rounded-2xl bg-surface-elevated p-4 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-subtle text-deep-navy">
         <Icon size={22} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="mb-2 flex flex-wrap gap-2">
           <Badge label={post.category || 'Sin categoria'} />
-          {post.is_sub_only && <Badge label="Miembros gratis" />}
+          {post.is_sub_only && <Badge label="Premium" />}
         </div>
         <h3 className="text-xl font-bold text-deep-navy">{post.title}</h3>
         <p className="mt-1 text-sm text-deep-navy/60">{post.description || 'Relato compartido por la comunidad.'}</p>
@@ -315,7 +321,7 @@ function ResultRow({ post, distance }: { post: DiscoverPost; distance: number | 
           {formatLocation(post, distance)}
         </p>
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -323,23 +329,23 @@ function Badge({ label }: { label: string }) {
   return <span className="rounded-full bg-cream px-3 py-1 text-xs font-bold uppercase tracking-widest text-deep-navy/60">{label}</span>;
 }
 
-function getCreatorName(post: DiscoverPost) {
+function getCreatorName(post: HistoriaPost) {
   return post.creators?.display_name || post.creators?.users?.email?.split('@')[0] || 'Creador PastFinder';
 }
 
-function getAvatar(post: DiscoverPost) {
+function getAvatar(post: HistoriaPost) {
   const name = getCreatorName(post);
   return post.creators?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0F172A&color=D4AF37`;
 }
 
-function formatLocation(post: DiscoverPost, distance: number | null) {
+function formatLocation(post: HistoriaPost, distance: number | null) {
   const city = post.creators?.location_city;
   const country = post.creators?.location_country;
   const place = [city, country].filter(Boolean).join(', ') || 'Ubicacion no indicada';
   return distance === null ? place : `${place} - ${Math.round(distance)} km`;
 }
 
-function distanceFromUser(userLocation: LocationPoint | null, post: DiscoverPost) {
+function distanceFromUser(userLocation: LocationPoint | null, post: HistoriaPost) {
   const latitude = post.creators?.latitude;
   const longitude = post.creators?.longitude;
 

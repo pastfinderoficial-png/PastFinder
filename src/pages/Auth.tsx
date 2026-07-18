@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../services/supabase';
+import { ensureCreatorProfile } from '../services/profile';
 import { notifications } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -14,9 +15,12 @@ import type { LucideIcon } from 'lucide-react';
 import { PastFinderLogo } from '../components/PastFinderLogo';
 import { openTermsModal } from '../components/TermsModal';
 
+type AuthProps = {
+  mode?: 'login' | 'register';
+};
 
-export function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+export function Auth({ mode = 'login' }: AuthProps) {
+  const [isLogin, setIsLogin] = useState(mode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -31,7 +35,7 @@ export function Auth() {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate('/feed');
+        navigate('/explorar');
       } else {
         if (!acceptedTerms) {
           throw new Error('Debes aceptar los Términos y Condiciones para registrarte.');
@@ -49,18 +53,8 @@ export function Auth() {
         if (error) throw error;
 
         if (data.user) {
-          await supabase.from('users').upsert({ id: data.user.id, email, role: 'creator' });
-          await supabase.from('creators').upsert({
-            user_id: data.user.id,
-            bio: 'Creador de PastFinder 60+',
-            monthly_price: 0,
-            kyc_status: 'pending',
-          });
-          await supabase.from('fans').upsert({
-            user_id: data.user.id,
-            display_name: email.split('@')[0],
-          });
-          
+          await ensureCreatorProfile(data.user.id, email);
+
           notifications.show({
             title: 'Registro exitoso',
             message: 'Por favor, revisa tu bandeja de entrada y verifica tu correo para poder entrar.',

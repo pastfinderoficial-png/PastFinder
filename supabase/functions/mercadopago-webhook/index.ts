@@ -3,7 +3,10 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js";
 import { MercadoPagoConfig, Payment } from "npm:mercadopago";
 
-const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN") || "APP_USR-780169382214975-060322-0b0b85480ad78f811216d3d21e002fd2-3138432350";
+const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN");
+if (!mpAccessToken) {
+  throw new Error("Falta configurar el secret MP_ACCESS_TOKEN en el proyecto de Supabase.");
+}
 const mpClient = new MercadoPagoConfig({ accessToken: mpAccessToken });
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
