@@ -25,7 +25,37 @@ export function Auth({ mode = 'login' }: AuthProps) {
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleGoogleAuth = async () => {
+    if (!isLogin && !acceptedTerms) {
+      notifications.show({
+        title: 'Error',
+        message: 'Debes aceptar los Términos y Condiciones para registrarte.',
+        color: 'red',
+      });
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'No se pudo iniciar sesion con Google.',
+        color: 'red',
+      });
+      setGoogleLoading(false);
+    }
+  };
 
   const handleAuth = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -171,10 +201,25 @@ export function Auth({ mode = 'login' }: AuthProps) {
             </button>
           </form>
 
+          <div className="my-6 flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-deep-navy/40">
+            <span className="h-px flex-1 bg-deep-navy/10" />
+            o
+            <span className="h-px flex-1 bg-deep-navy/10" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleAuth}
+            disabled={googleLoading}
+            className="inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-xl border border-deep-navy/15 bg-white px-6 text-lg font-bold text-deep-navy transition-all hover:bg-surface-subtle disabled:opacity-50"
+          >
+            <GoogleIcon size={20} />
+            {googleLoading ? 'Conectando...' : isLogin ? 'Entrar con Google' : 'Registrarme con Google'}
+          </button>
 
           <button
             onClick={() => setIsLogin((value) => !value)}
-            className="mt-6 w-full text-center font-semibold text-deep-navy/60 transition-colors hover:text-deep-navy"
+            className="mt-4 w-full text-center font-semibold text-deep-navy/60 transition-colors hover:text-deep-navy"
           >
             {isLogin ? 'No tienes cuenta? Registrate aqui' : 'Ya tienes cuenta? Inicia sesion'}
           </button>
@@ -191,5 +236,28 @@ function Feature({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
       <Icon className="text-heritage-gold" size={18} />
       <span className="font-bold">{label}</span>
     </div>
+  );
+}
+
+function GoogleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.28 1.48-1.13 2.73-2.4 3.58v2.98h3.89c2.28-2.1 3.53-5.15 3.53-8.8z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.07 7.93-2.9l-3.89-2.98c-1.08.72-2.46 1.15-4.04 1.15-3.11 0-5.74-2.1-6.68-4.92H1.3v3.07C3.26 21.3 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.32 14.35A7.2 7.2 0 0 1 4.94 12c0-.82.14-1.61.38-2.35V6.58H1.3A11.98 11.98 0 0 0 0 12c0 1.93.46 3.76 1.3 5.42l4.02-3.07z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.76 0 3.35.6 4.59 1.79l3.45-3.45C17.94 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.3 6.58l4.02 3.07C6.26 6.85 8.89 4.75 12 4.75z"
+      />
+    </svg>
   );
 }
