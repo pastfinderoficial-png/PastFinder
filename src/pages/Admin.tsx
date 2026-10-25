@@ -128,7 +128,7 @@ export function Admin() {
       <div className="mb-6 flex gap-2">
         <button
           onClick={() => setActiveTab('retiros')}
-          className={`rounded-full px-6 py-2 text-sm font-bold transition-colors ${
+          className={`rounded-full px-6 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
             activeTab === 'retiros' ? 'bg-deep-navy text-cream' : 'bg-surface-subtle text-deep-navy/60 hover:text-deep-navy'
           }`}
         >
@@ -136,7 +136,7 @@ export function Admin() {
         </button>
         <button
           onClick={() => setActiveTab('usuarios')}
-          className={`rounded-full px-6 py-2 text-sm font-bold transition-colors ${
+          className={`rounded-full px-6 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
             activeTab === 'usuarios' ? 'bg-deep-navy text-cream' : 'bg-surface-subtle text-deep-navy/60 hover:text-deep-navy'
           }`}
         >
@@ -201,13 +201,13 @@ export function Admin() {
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => handleUpdateStatus(withdrawal.id, 'completed')}
-                              className="rounded-lg bg-deep-navy px-3 py-1.5 text-xs font-bold text-cream hover:bg-deep-navy/90"
+                              className="rounded-lg bg-deep-navy px-3 py-1.5 text-xs font-bold text-cream transition-all duration-200 hover:bg-deep-navy/90 active:scale-95"
                             >
                               Marcar Pagado
                             </button>
                             <button
                               onClick={() => handleUpdateStatus(withdrawal.id, 'failed')}
-                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50"
+                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 transition-all duration-200 hover:bg-red-50 active:scale-95"
                             >
                               Rechazar
                             </button>

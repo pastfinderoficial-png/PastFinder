@@ -61,19 +61,19 @@ export function Subscripcion() {
           <Crown className="mx-auto mb-4 text-heritage-gold" size={38} />
           <h2 className="mb-2 text-2xl font-bold text-deep-navy">Aun no tienes suscripciones activas</h2>
           <p className="mb-6 text-deep-navy/60">Explora narradores y apoya a los que mas te inspiren.</p>
-          <Link to="/planes" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream">
+          <Link to="/planes" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream transition-all duration-200 active:scale-[0.98]">
             Conocer planes
           </Link>
         </div>
       ) : (
         <div className="space-y-4">
           {subscriptions.map((sub) => (
-            <div key={sub.creator_id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-surface-elevated p-5 shadow-sm">
+            <div key={sub.creator_id} className="flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] bg-surface-elevated p-5 shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)]">
               <Link to={`/autor/${sub.creator_id}`} className="flex min-w-0 items-center gap-4">
                 <img
                   src={
                     sub.creators?.profile_image_url ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.creators?.display_name || 'Narrador')}&background=0F172A&color=D4AF37`
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.creators?.display_name || 'Narrador')}&background=37424A&color=F5F4EE`
                   }
                   alt={sub.creators?.display_name || 'Narrador'}
                   className="h-14 w-14 rounded-full object-cover"
@@ -88,7 +88,7 @@ export function Subscripcion() {
               </Link>
               <button
                 onClick={handleCancelRequest}
-                className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-red-200 px-4 text-xs font-bold text-red-600 hover:bg-red-50"
+                className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-red-200 px-4 text-xs font-bold text-red-600 transition-all duration-200 hover:bg-red-50 active:scale-95"
               >
                 Cancelar suscripcion
               </button>

@@ -1,7 +1,21 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { MantineProvider } from '@mantine/core';
+import { MantineProvider, createTheme } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
+
+const theme = createTheme({
+  primaryColor: 'slateblue',
+  colors: {
+    slateblue: [
+      '#EEF3F6', '#D7E3EA', '#B4C9D5', '#8FACBC',
+      '#7A9BB0', '#6B8CA2', '#5C7F93', '#4C6B7D',
+      '#3D5566', '#2F4250',
+    ],
+  },
+  fontFamily: 'Outfit, sans-serif',
+  headings: { fontFamily: 'Newsreader, serif' },
+  defaultRadius: 'md',
+});
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -79,7 +93,7 @@ function AppShell() {
 
 function App() {
   return (
-    <MantineProvider defaultColorScheme="light">
+    <MantineProvider theme={theme} defaultColorScheme="light">
       <Notifications position="top-right" zIndex={1000} />
       <AuthProvider>
         <ModalsProvider>

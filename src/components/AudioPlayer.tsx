@@ -22,8 +22,8 @@ export function AudioPlayer({ audioUrl, isPpv, hasAccess }: AudioPlayerProps) {
 
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#D4AF37', // Heritage Gold
-      progressColor: '#0F172A', // Deep Navy
+      waveColor: '#7A9BB0', // Accent (slate blue)
+      progressColor: '#33424C', // Ink (deep slate)
       cursorColor: 'transparent',
       barWidth: 3,
       barGap: 2,

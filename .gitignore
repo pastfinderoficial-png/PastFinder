@@ -25,3 +25,8 @@ dist-ssr
 
 .env
 database_schema.sql
+
+# Local agent tooling
+.agents/
+.claude/
+agent/

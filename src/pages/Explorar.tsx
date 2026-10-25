@@ -24,6 +24,10 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '../utils';
+import { motion } from 'framer-motion';
+import { CATEGORIES } from '../constants/categories';
+import { PhotoBanner } from '../components/PhotoBanner';
+import bannerPhoto from '../assets/carousel/hero-1.jpg';
 
 type FeedFilter = 'all' | 'audio' | 'text' | 'video' | 'following';
 
@@ -44,8 +48,7 @@ type Post = {
   title: string;
   description?: string | null;
   media_type: 'audio' | 'photo' | 'video';
-  media_url?: string | null;
-  text_content?: string | null;
+  post_content?: { text_content?: string | null; media_url?: string | null } | null;
   category?: string | null;
   created_at: string;
   is_ppv?: boolean;
@@ -107,7 +110,16 @@ export function Explorar() {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
+          id,
+          creator_id,
+          title,
+          description,
+          media_type,
+          category,
+          created_at,
+          is_ppv,
+          is_sub_only,
+          post_content ( text_content, media_url ),
           creators (
           user_id,
           display_name,
@@ -139,7 +151,7 @@ export function Explorar() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return posts.filter((post) => {
-      const isTextPost = post.media_type === 'photo' || Boolean(post.text_content);
+      const isTextPost = post.media_type === 'photo' || Boolean(post.post_content?.text_content);
       const matchesType =
         activeFilter === 'all' ||
         (activeFilter === 'following' && following.includes(post.creator_id)) ||
@@ -151,7 +163,7 @@ export function Explorar() {
       const searchable = [
         post.title,
         post.description,
-        post.text_content,
+        post.post_content?.text_content,
         post.category,
         creatorName,
       ]
@@ -254,123 +266,192 @@ export function Explorar() {
     navigate(`/checkout?creator=${creatorId}`);
   };
 
+  const resultLabel = `${filteredPosts.length} ${filteredPosts.length === 1 ? 'publicacion' : 'publicaciones'}`;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 pb-32 md:py-10">
-      <section className="mb-8 grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="rounded-2xl bg-deep-navy p-6 text-cream shadow-sm md:p-8">
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-heritage-gold">
-            <Sparkles size={14} />
-            Comunidad 60+
-          </p>
-          <h1 className="mb-3 text-4xl font-bold leading-tight md:text-5xl">
-            Relatos reales, memorias y videos cortos de personas con historia.
-          </h1>
-          <p className="max-w-2xl text-base leading-7 text-cream/70 md:text-lg">
-            Descubre creadores mayores, sigue sus publicaciones, comenta con respeto y apoya sus
-            relatos premium cuando quieras ver mas.
-          </p>
-        </div>
+      <PhotoBanner image={bannerPhoto} className="mb-8 rounded-[2rem]" contentClassName="p-6 md:p-10">
+        <div className="grid gap-8 md:grid-cols-[1.4fr_1fr] md:items-end">
+          <div>
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-heritage-gold">
+              <Sparkles size={14} />
+              Comunidad 60+
+            </p>
+            <h1 className="mb-4 max-w-xl text-4xl font-bold leading-[1] tracking-tight md:text-5xl">
+              Relatos reales, memorias y videos cortos de personas con historia.
+            </h1>
+            <p className="max-w-lg text-base leading-7 text-cream/70">
+              Descubre creadores mayores, sigue sus publicaciones, comenta con respeto y apoya sus
+              relatos premium cuando quieras ver mas.
+            </p>
+          </div>
 
-        <aside className="rounded-2xl bg-surface-elevated p-5 shadow-sm">
-          <h2 className="mb-4 text-2xl font-bold text-deep-navy">Pulso de la comunidad</h2>
-          <div className="grid grid-cols-3 gap-3 text-center lg:grid-cols-1">
+          <div className="grid grid-cols-3 gap-2 md:gap-3">
             <Metric label="Relatos" value={posts.length} />
             <Metric label="Videos" value={posts.filter((post) => post.media_type === 'video').length} />
-            <Metric label="Conexiones" value={following.length} />
+            <Metric label="Siguiendo" value={following.length} />
           </div>
-        </aside>
-      </section>
+        </div>
+      </PhotoBanner>
 
-      <div className="mb-6 rounded-2xl bg-surface-elevated p-3 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-navy/35" size={20} />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar por titulo, tema o narrador"
-              className="min-h-12 w-full rounded-xl bg-surface-subtle py-3 pl-12 pr-4 text-deep-navy outline-none transition-all placeholder:text-deep-navy/40 focus:ring-2 focus:ring-heritage-gold"
-            />
-          </div>
+      <div className="sticky top-4 z-30 mb-6 md:top-24">
+        <div className="rounded-[1.5rem] bg-surface-elevated/90 p-2.5 shadow-[0_20px_40px_-24px_rgba(51,66,76,0.35)] backdrop-blur-md">
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-deep-navy/35" size={20} />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar por titulo, tema o narrador"
+                className="min-h-12 w-full rounded-2xl bg-surface-subtle py-3 pl-12 pr-4 text-deep-navy outline-none transition-all placeholder:text-deep-navy/40 focus:ring-2 focus:ring-heritage-gold"
+              />
+            </div>
 
-          <div className="flex gap-2 overflow-x-auto">
-            {filters.map((filter) => {
-              const Icon = filter.icon;
+            <div className="flex gap-1 overflow-x-auto rounded-2xl bg-surface-subtle p-1">
+              {filters.map((filter) => {
+                const Icon = filter.icon;
+                const isActive = activeFilter === filter.id;
 
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => setActiveFilter(filter.id)}
-                  className={cn(
-                    'inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-bold transition-all',
-                    activeFilter === filter.id
-                      ? 'bg-deep-navy text-cream shadow-sm'
-                      : 'bg-surface-subtle text-deep-navy/65 hover:text-deep-navy',
-                  )}
-                >
-                  <Icon size={18} />
-                  {filter.label}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={filter.id}
+                    onClick={() => setActiveFilter(filter.id)}
+                    className={cn(
+                      'relative inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-bold transition-colors duration-200 active:scale-95',
+                      isActive ? 'text-cream' : 'text-deep-navy/60 hover:text-deep-navy',
+                    )}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="explorar-filter-pill"
+                        className="absolute inset-0 rounded-xl bg-deep-navy"
+                        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                      />
+                    )}
+                    <span className="relative z-10 inline-flex items-center gap-2">
+                      <Icon size={17} />
+                      {filter.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
         <div className="space-y-6">
+          {!loading && (
+            <p className="px-1 text-xs font-bold uppercase tracking-widest text-deep-navy/45">{resultLabel}</p>
+          )}
+
           {loading ? (
-            [1, 2, 3].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl bg-surface-elevated" />)
+            [1, 2, 3].map((item) => <PostSkeleton key={item} />)
           ) : filteredPosts.length === 0 ? (
-            <div className="rounded-2xl bg-surface-elevated p-10 text-center shadow-sm">
-              <Sparkles className="mx-auto mb-4 text-heritage-gold" size={38} />
+            <div className="rounded-[1.75rem] bg-surface-sage/60 p-10 text-center">
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-surface-elevated text-heritage-gold">
+                <Sparkles size={26} />
+              </span>
               <h2 className="mb-2 text-2xl font-bold text-deep-navy">No hay publicaciones para este filtro</h2>
-              <p className="text-deep-navy/60">Prueba otra busqueda o publica tu primera historia desde el estudio.</p>
+              <p className="mb-6 text-deep-navy/60">Prueba otra busqueda o comparte tu primera historia desde el estudio.</p>
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <button
+                  onClick={() => {
+                    setQuery('');
+                    setActiveFilter('all');
+                  }}
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-surface-elevated px-6 font-bold text-deep-navy transition-all duration-200 active:scale-[0.98]"
+                >
+                  Limpiar filtros
+                </button>
+                <button
+                  onClick={() => navigate('/studio')}
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-deep-navy px-6 font-bold text-cream transition-all duration-200 active:scale-[0.98]"
+                >
+                  Ir al estudio
+                </button>
+              </div>
             </div>
           ) : (
-            filteredPosts.map((post) => (
-              <PostArticle
+            filteredPosts.map((post, index) => (
+              <motion.div
                 key={post.id}
-                post={post}
-                currentUserId={currentUser?.id}
-                isFollowing={following.includes(post.creator_id)}
-                isLiked={likedPosts.includes(post.id)}
-                isFavorited={favoritedPosts.includes(post.id)}
-                commentValue={newCommentByPost[post.id] || ''}
-                showComments={showComments === post.id}
-                onFollow={handleFollow}
-                onLike={handleLike}
-                onFavorite={handleFavorite}
-                onToggleComments={() => setShowComments(showComments === post.id ? null : post.id)}
-                onCommentChange={(value) => setNewCommentByPost((prev) => ({ ...prev, [post.id]: value }))}
-                onAddComment={handleAddComment}
-                onSubscribe={handleSubscribe}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ type: 'spring', stiffness: 110, damping: 20, delay: Math.min(index, 3) * 0.04 }}
+              >
+                <PostArticle
+                  post={post}
+                  currentUserId={currentUser?.id}
+                  isFollowing={following.includes(post.creator_id)}
+                  isLiked={likedPosts.includes(post.id)}
+                  isFavorited={favoritedPosts.includes(post.id)}
+                  commentValue={newCommentByPost[post.id] || ''}
+                  showComments={showComments === post.id}
+                  onFollow={handleFollow}
+                  onLike={handleLike}
+                  onFavorite={handleFavorite}
+                  onToggleComments={() => setShowComments(showComments === post.id ? null : post.id)}
+                  onCommentChange={(value) => setNewCommentByPost((prev) => ({ ...prev, [post.id]: value }))}
+                  onAddComment={handleAddComment}
+                  onSubscribe={handleSubscribe}
+                />
+              </motion.div>
             ))
           )}
         </div>
 
-        <aside className="hidden space-y-4 lg:block">
-          <div className="rounded-2xl bg-surface-elevated p-5 shadow-sm">
-            <h2 className="mb-3 text-2xl font-bold text-deep-navy">Filtros sugeridos</h2>
-            <div className="space-y-2 text-sm text-deep-navy/70">
-              <p>#amorDespuesDeLos60</p>
-              <p>#memoriasDeBarrio</p>
-              <p>#consejosDeVida</p>
-              <p>#viajesYRecuerdos</p>
+        <aside className="hidden lg:block">
+          <div className="sticky top-48 space-y-4">
+            <div className="rounded-[1.75rem] bg-surface-elevated p-5 shadow-[0_20px_40px_-24px_rgba(51,66,76,0.25)]">
+              <h2 className="mb-3 text-xl font-bold text-deep-navy">Explora por tema</h2>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setQuery(query === category ? '' : category)}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-200 active:scale-95',
+                      query === category
+                        ? 'bg-deep-navy text-cream'
+                        : 'bg-surface-subtle text-deep-navy/70 hover:bg-surface-sage',
+                    )}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="rounded-2xl bg-heritage-gold p-5 text-deep-navy shadow-sm">
-            <Lock className="mb-3" size={28} />
-            <h2 className="mb-2 text-2xl font-bold">Modelo premium</h2>
-            <p className="text-sm leading-6">
-              Los creadores pueden publicar para todos o exclusivo para sus suscriptores premium.
-            </p>
+
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-heritage-gold p-6 text-cream shadow-[0_20px_40px_-24px_rgba(92,127,147,0.6)]">
+              <Lock className="mb-3" size={26} />
+              <h2 className="mb-2 text-xl font-bold">Modelo premium</h2>
+              <p className="text-sm leading-6 text-cream/85">
+                Los creadores pueden publicar para todos o exclusivo para sus suscriptores premium.
+              </p>
+            </div>
           </div>
         </aside>
       </div>
+    </div>
+  );
+}
 
+function PostSkeleton() {
+  return (
+    <div className="space-y-4 rounded-[1.75rem] bg-surface-elevated p-5 shadow-[0_20px_40px_-24px_rgba(51,66,76,0.2)]">
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 animate-pulse rounded-full bg-surface-subtle" />
+        <div className="space-y-2">
+          <div className="h-4 w-32 animate-pulse rounded bg-surface-subtle" />
+          <div className="h-3 w-24 animate-pulse rounded bg-surface-subtle" />
+        </div>
+      </div>
+      <div className="h-7 w-3/4 animate-pulse rounded bg-surface-subtle" />
+      <div className="h-40 animate-pulse rounded-2xl bg-surface-subtle" />
     </div>
   );
 }
@@ -409,12 +490,16 @@ function PostArticle({
   const creatorName = getCreatorName(post);
   const creatorAvatar =
     post.creators?.profile_image_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName)}&background=0F172A&color=D4AF37`;
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName)}&background=37424A&color=F5F4EE`;
   const isMyPost = currentUserId === post.creator_id;
-  const isTextPost = post.media_type === 'photo' || Boolean(post.text_content);
+  const textContent = post.post_content?.text_content;
+  const mediaUrl = post.post_content?.media_url;
+  const isTextPost = post.media_type === 'photo' || Boolean(textContent);
+  const isPremium = Boolean(post.is_ppv || post.is_sub_only);
+  const isLocked = isPremium && !isMyPost && !post.post_content;
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-surface-elevated shadow-sm transition-all hover:shadow-md">
+    <article className="overflow-hidden rounded-[1.75rem] bg-surface-elevated shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)] transition-all duration-200 hover:shadow-[0_24px_48px_-20px_rgba(55,66,74,0.3)]">
       <div className="flex items-center justify-between gap-3 p-5">
         <div className="flex min-w-0 items-center gap-3">
           <img
@@ -442,7 +527,7 @@ function PostArticle({
             <button
               onClick={() => onFollow(post.creator_id)}
               className={cn(
-                'inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-bold transition-all',
+                'inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-bold transition-all duration-200 active:scale-95',
                 isFollowing ? 'bg-surface-subtle text-deep-navy/65' : 'bg-deep-navy text-cream',
               )}
             >
@@ -470,29 +555,46 @@ function PostArticle({
 
         {post.description && <p className="mb-4 text-deep-navy/70">{post.description}</p>}
 
-        {post.text_content && (
-          <ExpandableText
-            text={post.text_content}
-            className="mb-4 rounded-xl bg-cream/60 p-5 text-lg leading-8 text-deep-navy/80 whitespace-pre-wrap"
-          />
-        )}
+        {isLocked ? (
+          <div className="flex flex-col items-center gap-3 rounded-[1.5rem] bg-deep-navy p-8 text-center text-cream">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cream/10">
+              <Lock className="text-heritage-gold" size={22} />
+            </span>
+            <p className="text-lg font-bold">Contenido exclusivo para suscriptores</p>
+            <p className="max-w-sm text-sm text-cream/65">
+              Suscribete a {creatorName} para ver este contenido completo.
+            </p>
+            <button
+              onClick={() => onSubscribe(post.creator_id)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-heritage-gold px-5 font-bold text-cream transition-all duration-200 hover:bg-heritage-gold-dark active:scale-[0.98]"
+            >
+              <Crown size={16} />
+              Suscribirme
+            </button>
+          </div>
+        ) : (
+          <>
+            {textContent && (
+              <ExpandableText
+                text={textContent}
+                className="mb-4 rounded-xl bg-cream/60 p-5 text-lg leading-8 text-deep-navy/80 whitespace-pre-wrap"
+              />
+            )}
 
-        {post.media_type === 'audio' && post.media_url && (
-          <AudioPlayer
-            audioUrl={post.media_url}
-            isPpv={false}
-            hasAccess
-          />
-        )}
+            {post.media_type === 'audio' && mediaUrl && (
+              <AudioPlayer audioUrl={mediaUrl} isPpv={false} hasAccess />
+            )}
 
-        {post.media_type === 'video' && post.media_url && (
-          <video
-            className="aspect-video w-full rounded-xl bg-deep-navy object-cover"
-            src={post.media_url}
-            controls
-            playsInline
-            preload="metadata"
-          />
+            {post.media_type === 'video' && mediaUrl && (
+              <video
+                className="aspect-video w-full rounded-xl bg-deep-navy object-cover"
+                src={mediaUrl}
+                controls
+                playsInline
+                preload="metadata"
+              />
+            )}
+          </>
         )}
       </div>
 
@@ -501,7 +603,7 @@ function PostArticle({
           <button
             onClick={() => onLike(post.id)}
             className={cn(
-              'inline-flex items-center gap-2 font-bold transition-all',
+              'inline-flex items-center gap-2 font-bold transition-all duration-200 active:scale-90',
               isLiked ? 'text-red-500' : 'text-deep-navy/45 hover:text-red-500',
             )}
           >
@@ -511,7 +613,7 @@ function PostArticle({
           <button
             onClick={onToggleComments}
             className={cn(
-              'inline-flex items-center gap-2 font-bold transition-all',
+              'inline-flex items-center gap-2 font-bold transition-all duration-200 active:scale-90',
               showComments ? 'text-deep-navy' : 'text-deep-navy/45 hover:text-deep-navy',
             )}
           >
@@ -552,7 +654,7 @@ function PostArticle({
               post.comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3">
                   <img
-                    src={`https://ui-avatars.com/api/?name=${comment.user_id}&background=D4AF37&color=0F172A`}
+                    src={`https://ui-avatars.com/api/?name=${comment.user_id}&background=8B7556&color=F5F4EE`}
                     className="h-8 w-8 rounded-full"
                     alt="Avatar de comentario"
                   />
@@ -605,9 +707,9 @@ function Badge({ label }: { label: string }) {
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-surface-subtle p-3">
-      <span className="block text-2xl font-bold text-deep-navy">{value}</span>
-      <span className="text-xs font-bold uppercase tracking-widest text-deep-navy/50">{label}</span>
+    <div className="rounded-2xl bg-cream/10 p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md md:p-4">
+      <span className="block text-2xl font-bold tracking-tight text-cream md:text-3xl">{value}</span>
+      <span className="text-[10px] font-bold uppercase tracking-widest text-cream/60 md:text-xs">{label}</span>
     </div>
   );
 }

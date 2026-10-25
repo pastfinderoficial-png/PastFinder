@@ -131,7 +131,7 @@ export function Dashboard() {
           <button
             onClick={() => void handleWithdraw()}
             disabled={submitting || earnings <= 0}
-            className="mt-4 flex w-full min-h-12 items-center justify-center gap-2 rounded-xl bg-deep-navy font-bold text-cream hover:bg-deep-navy/90 disabled:opacity-50"
+            className="mt-4 flex w-full min-h-12 items-center justify-center gap-2 rounded-xl bg-deep-navy font-bold text-cream transition-all duration-200 hover:bg-deep-navy/90 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
           >
             <Wallet size={18} />
             {submitting ? 'Enviando...' : 'Solicitar Retiro'}

@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Compass, FileText, MapPin, Mic, Search, Sparkles, Video } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { cn } from '../utils';
+import { PhotoBanner } from '../components/PhotoBanner';
+import bannerPhoto from '../assets/carousel/hero-7.jpg';
 
 type HistoriaPost = {
   id: string;
@@ -143,7 +145,7 @@ export function Historias() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 pb-32 md:py-10">
-      <section className="mb-6 rounded-2xl bg-deep-navy p-6 text-cream shadow-sm md:p-8">
+      <PhotoBanner image={bannerPhoto} className="mb-6" contentClassName="p-6 md:p-8">
         <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-heritage-gold">
           <Compass size={14} />
           Filtros inteligentes
@@ -152,7 +154,7 @@ export function Historias() {
         <p className="max-w-3xl text-lg leading-7 text-cream/70">
           Combina busqueda, ciudad, categoria y ubicacion para descubrir creadores cercanos o historias parecidas a lo que quieres leer.
         </p>
-      </section>
+      </PhotoBanner>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <aside className="space-y-4">
@@ -335,7 +337,7 @@ function getCreatorName(post: HistoriaPost) {
 
 function getAvatar(post: HistoriaPost) {
   const name = getCreatorName(post);
-  return post.creators?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0F172A&color=D4AF37`;
+  return post.creators?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=37424A&color=F5F4EE`;
 }
 
 function formatLocation(post: HistoriaPost, distance: number | null) {

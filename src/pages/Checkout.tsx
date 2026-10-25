@@ -74,14 +74,14 @@ export function Checkout() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8 pb-32 md:py-16">
-      <div className="rounded-3xl bg-cream p-8 shadow-xl">
+      <div className="rounded-[1.75rem] bg-surface-elevated p-8 shadow-[0_24px_48px_-20px_rgba(55,66,74,0.3)]">
         <h1 className="mb-2 text-2xl font-bold text-deep-navy">Completar suscripcion</h1>
         {creator && (
           <div className="mb-4 flex items-center gap-3">
             <img
               src={
                 creator.profile_image_url ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(creator.display_name || 'Narrador')}&background=0F172A&color=D4AF37`
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(creator.display_name || 'Narrador')}&background=37424A&color=F5F4EE`
               }
               alt={creator.display_name || 'Narrador'}
               className="h-12 w-12 rounded-full object-cover"

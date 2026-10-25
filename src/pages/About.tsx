@@ -27,7 +27,7 @@ export function About() {
 
 function AboutCard({ icon: Icon, title, text }: { icon: typeof ShieldCheck; title: string; text: string }) {
   return (
-    <div className="rounded-2xl bg-surface-elevated p-6 text-center shadow-sm">
+    <div className="rounded-[1.75rem] bg-surface-elevated p-6 text-center shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)]">
       <Icon className="mx-auto mb-3 text-heritage-gold" size={32} />
       <h3 className="mb-2 text-lg font-bold text-deep-navy">{title}</h3>
       <p className="text-sm text-deep-navy/60">{text}</p>

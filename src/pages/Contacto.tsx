@@ -11,7 +11,7 @@ export function Contacto() {
       <div className="space-y-4">
         <a
           href="mailto:pastfinder.oficial@gmail.com"
-          className="flex items-center gap-4 rounded-2xl bg-surface-elevated p-5 shadow-sm transition-shadow hover:shadow-md"
+          className="flex items-center gap-4 rounded-[1.75rem] bg-surface-elevated p-5 shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_48px_-20px_rgba(55,66,74,0.3)] active:scale-[0.99]"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-heritage-gold/20 text-heritage-gold">
             <Mail size={22} />
@@ -24,7 +24,7 @@ export function Contacto() {
 
         <a
           href="tel:+56972263172"
-          className="flex items-center gap-4 rounded-2xl bg-surface-elevated p-5 shadow-sm transition-shadow hover:shadow-md"
+          className="flex items-center gap-4 rounded-[1.75rem] bg-surface-elevated p-5 shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_48px_-20px_rgba(55,66,74,0.3)] active:scale-[0.99]"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-heritage-gold/20 text-heritage-gold">
             <Phone size={22} />
