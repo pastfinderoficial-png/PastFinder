@@ -25,7 +25,7 @@ export function Favoritos() {
       const { data } = await supabase
         .from('favorites')
         .select(
-          'post_id, posts ( id, title, description, media_type, media_url, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url ) )',
+          'post_id, posts ( id, title, description, media_type, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url ) )',
         )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });

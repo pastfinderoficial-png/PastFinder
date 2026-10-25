@@ -19,7 +19,6 @@ type CreatorProfile = {
 
 type ProfilePostSummary = {
   media_type: 'audio' | 'photo' | 'video';
-  text_content?: string | null;
   is_ppv?: boolean;
   is_sub_only?: boolean;
 };
@@ -38,7 +37,7 @@ export function Profile() {
 
       const [{ data: creatorData }, { data: postData }] = await Promise.all([
         supabase.from('creators').select('*').eq('user_id', currentUser.id).maybeSingle(),
-        supabase.from('posts').select('media_type, text_content, is_ppv, is_sub_only').eq('creator_id', currentUser.id),
+        supabase.from('posts').select('media_type, is_ppv, is_sub_only').eq('creator_id', currentUser.id),
       ]);
 
       setCreator((creatorData as CreatorProfile | null) || null);
@@ -51,7 +50,7 @@ export function Profile() {
 
   const stats = useMemo(
     () => ({
-      textos: posts.filter((post) => post.media_type === 'photo' || post.text_content).length,
+      textos: posts.filter((post) => post.media_type === 'photo').length,
       audios: posts.filter((post) => post.media_type === 'audio').length,
       videos: posts.filter((post) => post.media_type === 'video').length,
       premium: posts.filter((post) => post.is_ppv || post.is_sub_only).length,

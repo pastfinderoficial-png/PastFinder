@@ -46,7 +46,7 @@ export function Studio() {
 
       const { data, error } = await supabase
         .from('posts')
-        .select('*')
+        .select('title, description, media_type, category, is_sub_only, post_content ( text_content, media_url )')
         .eq('id', editId)
         .eq('creator_id', user.id)
         .maybeSingle();
@@ -59,10 +59,11 @@ export function Studio() {
 
       setTitle(data.title || '');
       setDescription(data.description || '');
-      setTextContent(data.text_content || '');
+      const storedContent = data.post_content as { text_content?: string | null; media_url?: string | null } | null;
+      setTextContent(storedContent?.text_content || '');
       setAccessType(data.is_sub_only ? 'subscribers' : 'free');
       setActiveType(data.media_type === 'photo' ? 'text' : (data.media_type as StudioType));
-      setExistingMediaUrl(data.media_url || null);
+      setExistingMediaUrl(storedContent?.media_url || null);
 
       if (data.category && !categories.includes(data.category)) {
         setIsCustomCategory(true);
@@ -126,17 +127,38 @@ export function Studio() {
         title: title.trim(),
         description: description.trim() || null,
         media_type: mediaType,
-        media_url: mediaUrl || null,
-        text_content: activeType === 'text' ? textContent.trim() : null,
         category: (isCustomCategory ? customCategory.trim() : category) || categories[0],
         is_sub_only: accessType === 'subscribers',
       };
+      const content = {
+        media_url: mediaUrl || null,
+        text_content: activeType === 'text' ? textContent.trim() : null,
+      };
 
-      const { error: dbError } = editId
-        ? await supabase.from('posts').update(payload).eq('id', editId).eq('creator_id', user.id)
-        : await supabase.from('posts').insert({ ...payload, is_ppv: false, price: 0 });
+      if (editId) {
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update(payload)
+          .eq('id', editId)
+          .eq('creator_id', user.id);
+        if (updateError) throw updateError;
 
-      if (dbError) throw dbError;
+        const { error: contentError } = await supabase.from('post_content').upsert({ post_id: editId, ...content });
+        if (contentError) throw contentError;
+      } else {
+        const { data: created, error: insertError } = await supabase
+          .from('posts')
+          .insert({ ...payload, is_ppv: false, price: 0 })
+          .select('id')
+          .single();
+        if (insertError) throw insertError;
+
+        const { error: contentError } = await supabase.from('post_content').insert({ post_id: created.id, ...content });
+        if (contentError) {
+          await supabase.from('posts').delete().eq('id', created.id);
+          throw contentError;
+        }
+      }
 
       setMessage(editId ? 'Cambios guardados. Te llevamos a tus historias...' : 'Publicado con exito. Te llevamos a tus historias...');
 

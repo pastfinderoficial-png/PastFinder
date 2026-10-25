@@ -7,7 +7,6 @@ export type StoryCardPost = {
   title: string;
   description?: string | null;
   media_type: 'audio' | 'photo' | 'video';
-  media_url?: string | null;
   category?: string | null;
   is_ppv?: boolean | null;
   is_sub_only?: boolean | null;
@@ -28,7 +27,6 @@ export function StoryCard({ post }: { post: StoryCardPost }) {
     post.creators?.profile_image_url ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName)}&background=37424A&color=F5F4EE`;
   const isPremium = Boolean(post.is_ppv || post.is_sub_only);
-  const hasImage = post.media_type === 'photo' && Boolean(post.media_url);
 
   return (
     <motion.article
@@ -41,17 +39,9 @@ export function StoryCard({ post }: { post: StoryCardPost }) {
     >
       <Link to={`/historia/${post.id}`} className="block">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-deep-navy">
-          {hasImage ? (
-            <img
-              src={post.media_url as string}
-              alt={post.title}
-              className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] ${isPremium ? 'blur-md scale-110' : ''}`}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-deep-navy">
-              <Icon size={44} className="text-cream/25" strokeWidth={1.5} />
-            </div>
-          )}
+          <div className="flex h-full w-full items-center justify-center bg-deep-navy">
+            <Icon size={44} className="text-cream/25" strokeWidth={1.5} />
+          </div>
 
           {post.media_type === 'video' && !isPremium && (
             <div className="absolute inset-0 flex items-center justify-center">

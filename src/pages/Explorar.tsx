@@ -48,8 +48,7 @@ type Post = {
   title: string;
   description?: string | null;
   media_type: 'audio' | 'photo' | 'video';
-  media_url?: string | null;
-  text_content?: string | null;
+  post_content?: { text_content?: string | null; media_url?: string | null } | null;
   category?: string | null;
   created_at: string;
   is_ppv?: boolean;
@@ -111,7 +110,16 @@ export function Explorar() {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
+          id,
+          creator_id,
+          title,
+          description,
+          media_type,
+          category,
+          created_at,
+          is_ppv,
+          is_sub_only,
+          post_content ( text_content, media_url ),
           creators (
           user_id,
           display_name,
@@ -143,7 +151,7 @@ export function Explorar() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return posts.filter((post) => {
-      const isTextPost = post.media_type === 'photo' || Boolean(post.text_content);
+      const isTextPost = post.media_type === 'photo' || Boolean(post.post_content?.text_content);
       const matchesType =
         activeFilter === 'all' ||
         (activeFilter === 'following' && following.includes(post.creator_id)) ||
@@ -155,7 +163,7 @@ export function Explorar() {
       const searchable = [
         post.title,
         post.description,
-        post.text_content,
+        post.post_content?.text_content,
         post.category,
         creatorName,
       ]
@@ -484,7 +492,11 @@ function PostArticle({
     post.creators?.profile_image_url ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName)}&background=37424A&color=F5F4EE`;
   const isMyPost = currentUserId === post.creator_id;
-  const isTextPost = post.media_type === 'photo' || Boolean(post.text_content);
+  const textContent = post.post_content?.text_content;
+  const mediaUrl = post.post_content?.media_url;
+  const isTextPost = post.media_type === 'photo' || Boolean(textContent);
+  const isPremium = Boolean(post.is_ppv || post.is_sub_only);
+  const isLocked = isPremium && !isMyPost && !post.post_content;
 
   return (
     <article className="overflow-hidden rounded-[1.75rem] bg-surface-elevated shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)] transition-all duration-200 hover:shadow-[0_24px_48px_-20px_rgba(55,66,74,0.3)]">
@@ -543,29 +555,46 @@ function PostArticle({
 
         {post.description && <p className="mb-4 text-deep-navy/70">{post.description}</p>}
 
-        {post.text_content && (
-          <ExpandableText
-            text={post.text_content}
-            className="mb-4 rounded-xl bg-cream/60 p-5 text-lg leading-8 text-deep-navy/80 whitespace-pre-wrap"
-          />
-        )}
+        {isLocked ? (
+          <div className="flex flex-col items-center gap-3 rounded-[1.5rem] bg-deep-navy p-8 text-center text-cream">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cream/10">
+              <Lock className="text-heritage-gold" size={22} />
+            </span>
+            <p className="text-lg font-bold">Contenido exclusivo para suscriptores</p>
+            <p className="max-w-sm text-sm text-cream/65">
+              Suscribete a {creatorName} para ver este contenido completo.
+            </p>
+            <button
+              onClick={() => onSubscribe(post.creator_id)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-heritage-gold px-5 font-bold text-cream transition-all duration-200 hover:bg-heritage-gold-dark active:scale-[0.98]"
+            >
+              <Crown size={16} />
+              Suscribirme
+            </button>
+          </div>
+        ) : (
+          <>
+            {textContent && (
+              <ExpandableText
+                text={textContent}
+                className="mb-4 rounded-xl bg-cream/60 p-5 text-lg leading-8 text-deep-navy/80 whitespace-pre-wrap"
+              />
+            )}
 
-        {post.media_type === 'audio' && post.media_url && (
-          <AudioPlayer
-            audioUrl={post.media_url}
-            isPpv={false}
-            hasAccess
-          />
-        )}
+            {post.media_type === 'audio' && mediaUrl && (
+              <AudioPlayer audioUrl={mediaUrl} isPpv={false} hasAccess />
+            )}
 
-        {post.media_type === 'video' && post.media_url && (
-          <video
-            className="aspect-video w-full rounded-xl bg-deep-navy object-cover"
-            src={post.media_url}
-            controls
-            playsInline
-            preload="metadata"
-          />
+            {post.media_type === 'video' && mediaUrl && (
+              <video
+                className="aspect-video w-full rounded-xl bg-deep-navy object-cover"
+                src={mediaUrl}
+                controls
+                playsInline
+                preload="metadata"
+              />
+            )}
+          </>
         )}
       </div>
 

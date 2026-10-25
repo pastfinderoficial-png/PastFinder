@@ -58,7 +58,7 @@ export function Home() {
       const [{ data: postData }, { data: creatorData }] = await Promise.all([
         supabase
           .from('posts')
-          .select('id, title, description, media_type, media_url, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url )')
+          .select('id, title, description, media_type, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url )')
           .order('created_at', { ascending: false })
           .limit(6),
         supabase

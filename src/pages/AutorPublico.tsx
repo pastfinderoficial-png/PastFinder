@@ -64,7 +64,7 @@ export function AutorPublico() {
       const [{ data: postData }, { count }] = await Promise.all([
         supabase
           .from('posts')
-          .select('id, title, description, media_type, media_url, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url )')
+          .select('id, title, description, media_type, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url )')
           .eq('creator_id', id)
           .order('created_at', { ascending: false }),
         supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', id),

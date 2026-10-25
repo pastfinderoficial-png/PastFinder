@@ -38,11 +38,24 @@ export function MisHistorias() {
       setLoading(true);
       const { data } = await supabase
         .from('posts')
-        .select('*')
+        .select(
+          'id, title, description, media_type, category, is_ppv, is_sub_only, created_at, post_content ( text_content, media_url )',
+        )
         .eq('creator_id', user.id)
         .order('created_at', { ascending: false });
 
-      setPosts((data || []) as MyPost[]);
+      const rows = (data || []) as unknown as Array<
+        Omit<MyPost, 'text_content' | 'media_url'> & {
+          post_content?: { text_content?: string | null; media_url?: string | null } | null;
+        }
+      >;
+      setPosts(
+        rows.map(({ post_content, ...post }) => ({
+          ...post,
+          text_content: post_content?.text_content ?? null,
+          media_url: post_content?.media_url ?? null,
+        })),
+      );
       setLoading(false);
     }
 
