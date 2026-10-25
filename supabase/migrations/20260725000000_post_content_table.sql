@@ -1,18 +1,19 @@
 -- ============================================================================
--- Gate premium post content at the database level.
+-- Step 1 of 2: add public.post_content (additive, safe to run before deploy).
 --
 -- Problem: posts_select_all (using true) lets any client read posts.text_content
 -- and posts.media_url, including for premium (is_ppv / is_sub_only) posts.
 -- get_post_detail() only protected the detail screen, not direct table reads.
 --
--- Fix: move the two sensitive columns to public.post_content, whose RLS only
--- allows the owner, active subscribers, or anyone for free posts. Non-destructive:
--- data is copied, the legacy columns are kept (but made unreadable) so a
--- follow-up migration can drop them once this one is verified in production.
+-- Fix: keep the two sensitive columns in public.post_content, whose RLS only
+-- allows the owner, active subscribers, or anyone for free posts.
 --
--- Known residual gap (unchanged): the `media` storage bucket is public, so an
--- already-known media URL can still be fetched directly. Closing it needs a
--- private bucket + signed URLs.
+-- This step changes nothing the currently deployed frontend depends on. Deploy
+-- the new frontend, then run step 2 (20260725000100_revoke_legacy_post_columns).
+--
+-- Known residual gap: the `media` storage bucket is public, so an already-known
+-- media URL can still be fetched directly. Closing it needs a private bucket
+-- and signed URLs.
 -- ============================================================================
 
 -- 1. Table ------------------------------------------------------------------
@@ -86,27 +87,8 @@ create policy "post_content_delete_owner" on public.post_content
     exists (select 1 from public.posts p where p.id = post_id and p.creator_id = auth.uid())
   );
 
--- 5. Make the legacy columns unreadable by API roles -------------------------
--- A column-level REVOKE is a no-op while a table-level SELECT grant exists, so
--- revoke the table grant and re-grant every column except the two sensitive ones.
-revoke select on public.posts from anon, authenticated;
-
-do $$
-declare
-  v_cols text;
-begin
-  select string_agg(quote_ident(column_name), ', ' order by ordinal_position)
-    into v_cols
-  from information_schema.columns
-  where table_schema = 'public'
-    and table_name = 'posts'
-    and column_name not in ('text_content', 'media_url');
-
-  execute format('grant select (%s) on public.posts to anon, authenticated', v_cols);
-end
-$$;
-
--- 6. get_post_detail now reads content from post_content ----------------------
+-- 5. get_post_detail reads content from post_content (falls back to the legacy
+--    columns until step 2, so it works before and after the cutover) ----------
 create or replace function public.get_post_detail(p_post_id uuid)
 returns table (
   id uuid,
@@ -164,3 +146,6 @@ end;
 $$;
 
 grant execute on function public.get_post_detail(uuid) to anon, authenticated;
+
+-- Make PostgREST see the new table immediately (needed for embeds).
+notify pgrst, 'reload schema';
