@@ -19,6 +19,7 @@ export type StoryCardPost = {
 };
 
 const mediaIcon = { audio: Mic, photo: FileText, video: Video };
+const panelTone = { audio: 'bg-deep-navy', video: 'bg-heritage-gold-dark', photo: 'bg-taupe-dark' };
 
 export function StoryCard({ post }: { post: StoryCardPost }) {
   const Icon = mediaIcon[post.media_type] || FileText;
@@ -38,8 +39,8 @@ export function StoryCard({ post }: { post: StoryCardPost }) {
       className="group overflow-hidden rounded-[1.75rem] bg-surface-elevated shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)] transition-shadow duration-200 hover:shadow-[0_24px_48px_-20px_rgba(55,66,74,0.3)]"
     >
       <Link to={`/historia/${post.id}`} className="block">
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-deep-navy">
-          <div className="flex h-full w-full items-center justify-center bg-deep-navy">
+        <div className={`relative aspect-[16/8] w-full overflow-hidden md:aspect-[4/3] ${panelTone[post.media_type] || 'bg-deep-navy'}`}>
+          <div className="flex h-full w-full items-center justify-center">
             <Icon size={44} className="text-cream/25" strokeWidth={1.5} />
           </div>
 
