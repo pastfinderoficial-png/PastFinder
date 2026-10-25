@@ -9,6 +9,8 @@ import { FileText, Mic, Upload, Video, Crown, Globe2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '../utils';
 import { CATEGORIES as categories } from '../constants/categories';
+import { PhotoBanner } from '../components/PhotoBanner';
+import bannerPhoto from '../assets/carousel/senior-7.jpg';
 
 type StudioType = 'audio' | 'text' | 'video';
 type AccessType = 'free' | 'subscribers';
@@ -172,7 +174,7 @@ export function Studio() {
         <p className="mt-2 text-deep-navy/60">No existe o no te pertenece.</p>
         <button
           onClick={() => navigate('/mis-historias')}
-          className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream"
+          className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream transition-all duration-200 active:scale-[0.98]"
         >
           Volver a mis historias
         </button>
@@ -182,7 +184,7 @@ export function Studio() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 pb-32 md:py-10">
-      <section className="mb-8 rounded-2xl bg-deep-navy p-6 text-cream shadow-sm md:p-8">
+      <PhotoBanner image={bannerPhoto} className="mb-8" contentClassName="p-6 md:p-8">
         <p className="mb-3 text-sm font-bold uppercase tracking-widest text-heritage-gold">Estudio 60+</p>
         <h1 className="mb-3 text-4xl font-bold md:text-5xl">
           {editId ? 'Edita tu historia.' : 'Comparte una historia, un texto o un video corto.'}
@@ -192,7 +194,7 @@ export function Studio() {
             ? 'Actualiza el titulo, la descripcion, el tema o el acceso de tu historia.'
             : 'Publica contenido abierto a todos o exclusivo para tus suscriptores premium. Mantuvimos los controles grandes y claros para que grabar sea simple.'}
         </p>
-      </section>
+      </PhotoBanner>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <aside className="rounded-2xl bg-surface-elevated p-4 shadow-sm">
@@ -340,7 +342,7 @@ export function Studio() {
                   <video className="aspect-video w-full rounded-xl bg-deep-navy object-cover" src={existingMediaUrl} controls playsInline preload="metadata" />
                 </div>
               )}
-              <label className="flex min-h-56 cursor-pointer flex-col items-center justify-center rounded-xl bg-cream p-6 text-center text-deep-navy transition-all hover:shadow-sm">
+              <label className="flex min-h-56 cursor-pointer flex-col items-center justify-center rounded-xl bg-cream p-6 text-center text-deep-navy transition-all duration-200 hover:shadow-sm active:scale-[0.99]">
                 <Upload className="mb-3 text-heritage-gold" size={40} />
                 <span className="text-xl font-bold">{existingMediaUrl ? 'Reemplazar video corto' : 'Seleccionar video corto'}</span>
                 <span className="mt-2 max-w-sm text-sm text-deep-navy/60">
@@ -366,7 +368,7 @@ export function Studio() {
           <button
             type="submit"
             disabled={!canPublish || isPublishing}
-            className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-deep-navy px-8 py-4 text-lg font-bold text-cream transition-all hover:bg-deep-navy/90 disabled:cursor-not-allowed disabled:opacity-45"
+            className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-deep-navy px-8 py-4 text-lg font-bold text-cream transition-all duration-200 hover:bg-deep-navy/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100"
           >
             {isPublishing ? (editId ? 'Guardando...' : 'Publicando...') : editId ? 'Guardar cambios' : 'Publicar ahora'}
           </button>
@@ -416,9 +418,9 @@ function TypeButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex min-h-20 items-center gap-3 rounded-xl p-3 text-left transition-all',
+        'flex min-h-20 items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 active:scale-[0.98]',
         active ? 'bg-deep-navy text-cream shadow-sm' : 'bg-surface-subtle text-deep-navy hover:bg-cream',
-        disabled && 'cursor-not-allowed opacity-60',
+        disabled && 'cursor-not-allowed opacity-60 active:scale-100',
       )}
     >
       <span className={cn('rounded-xl p-3', active ? 'bg-cream/10 text-heritage-gold' : 'bg-cream text-deep-navy/65')}>
@@ -448,7 +450,7 @@ function AccessButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold transition-all',
+        'inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold transition-all duration-200 active:scale-95',
         active ? 'bg-deep-navy text-cream' : 'bg-cream text-deep-navy/65 hover:text-deep-navy',
       )}
     >

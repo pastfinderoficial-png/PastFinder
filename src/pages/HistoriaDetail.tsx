@@ -209,7 +209,7 @@ export function HistoriaDetail() {
   const creatorName = creator?.display_name || 'Narrador PastFinder';
   const creatorAvatar =
     creator?.profile_image_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName)}&background=0F172A&color=D4AF37`;
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(creatorName)}&background=37424A&color=F5F4EE`;
   const isMine = user?.id === post.creator_id;
   const isPremium = post.is_ppv || post.is_sub_only;
 
@@ -230,7 +230,7 @@ export function HistoriaDetail() {
           <button
             onClick={() => void handleFollow()}
             className={cn(
-              'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-4 text-xs font-bold transition-all',
+              'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-4 text-xs font-bold transition-all duration-200 active:scale-95',
               isFollowing ? 'bg-surface-subtle text-deep-navy/65' : 'bg-deep-navy text-cream',
             )}
           >
@@ -283,8 +283,10 @@ export function HistoriaDetail() {
               {post.preview_text}…
             </div>
           )}
-          <div className="mb-5 rounded-b-xl border-t border-heritage-gold/30 bg-deep-navy p-8 text-center text-cream">
-            <Lock className="mx-auto mb-3 text-heritage-gold" size={32} />
+          <div className="mb-5 overflow-hidden rounded-b-[1.75rem] border-t border-heritage-gold/30 bg-deep-navy p-8 text-center text-cream">
+            <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-cream/10">
+              <Lock className="text-heritage-gold" size={22} />
+            </span>
             <h2 className="mb-2 text-2xl font-bold">Este contenido es exclusivo para miembros Premium</h2>
             <p className="mb-6 text-cream/70">
               Suscríbete a {creatorName} para leer la historia completa.
@@ -292,14 +294,14 @@ export function HistoriaDetail() {
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 onClick={handleSubscribe}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-heritage-gold px-6 font-bold text-deep-navy"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-heritage-gold px-6 font-bold text-cream transition-all duration-200 hover:bg-heritage-gold-dark active:scale-[0.98]"
               >
                 <Crown size={18} />
                 Registrarme
               </button>
               <Link
                 to="/planes"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-cream/10 px-6 font-bold text-cream"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-cream/10 px-6 font-bold text-cream transition-all duration-200 hover:bg-cream/20 active:scale-[0.98]"
               >
                 Conocer planes
               </Link>
@@ -313,7 +315,7 @@ export function HistoriaDetail() {
           <button
             onClick={() => void handleLike()}
             className={cn(
-              'inline-flex items-center gap-2 font-bold transition-all',
+              'inline-flex items-center gap-2 font-bold transition-all duration-200 active:scale-90',
               isLiked ? 'text-red-500' : 'text-deep-navy/45 hover:text-red-500',
             )}
           >
@@ -338,7 +340,7 @@ export function HistoriaDetail() {
           <button
             onClick={() => void handleFavorite()}
             className={cn(
-              'inline-flex items-center gap-2 font-bold transition-all',
+              'inline-flex items-center gap-2 font-bold transition-all duration-200 active:scale-90',
               isFavorited ? 'text-heritage-gold' : 'text-deep-navy/45 hover:text-heritage-gold',
             )}
             aria-label="Guardar en favoritos"
@@ -355,7 +357,7 @@ export function HistoriaDetail() {
             comments.map((comment) => (
               <div key={comment.id} className="flex gap-3">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${comment.user_id}&background=D4AF37&color=0F172A`}
+                  src={`https://ui-avatars.com/api/?name=${comment.user_id}&background=8B7556&color=F5F4EE`}
                   className="h-8 w-8 rounded-full"
                   alt="Avatar de comentario"
                 />

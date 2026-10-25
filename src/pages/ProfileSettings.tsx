@@ -68,7 +68,7 @@ export function ProfileSettings() {
   const avatarPreview = avatarFile
     ? URL.createObjectURL(avatarFile)
     : creator?.profile_image_url ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || 'User')}&background=0F172A&color=D4AF37&size=150`;
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || 'User')}&background=37424A&color=F5F4EE&size=150`;
   const coverPreview = coverFile ? URL.createObjectURL(coverFile) : creator?.cover_image_url || '';
 
   const handleUseLocation = () => {
@@ -133,16 +133,16 @@ export function ProfileSettings() {
       <p className="text-sm font-bold uppercase tracking-widest text-heritage-gold">Configuracion</p>
       <h1 className="mb-6 text-3xl font-bold text-deep-navy md:text-4xl">Editar perfil</h1>
 
-      <div className="mb-6 overflow-hidden rounded-2xl bg-surface-elevated shadow-sm">
+      <div className="mb-6 overflow-hidden rounded-[1.75rem] bg-surface-elevated shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)]">
         <div
           className="flex min-h-40 items-end bg-deep-navy p-4"
           style={
             coverPreview
-              ? { backgroundImage: `linear-gradient(90deg, rgba(15,23,42,.85), rgba(15,23,42,.28)), url(${coverPreview})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              ? { backgroundImage: `linear-gradient(90deg, rgba(55,66,74,.85), rgba(55,66,74,.28)), url(${coverPreview})`, backgroundSize: 'cover', backgroundPosition: 'center' }
               : undefined
           }
         >
-          <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-cream px-4 text-sm font-bold text-deep-navy">
+          <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-cream px-4 text-sm font-bold text-deep-navy transition-all duration-200 hover:bg-cream/90 active:scale-95">
             <Camera size={16} />
             Cambiar portada
             <input type="file" accept="image/*" className="sr-only" onChange={(event) => setCoverFile(event.target.files?.[0] || null)} />
@@ -150,7 +150,7 @@ export function ProfileSettings() {
         </div>
         <div className="-mt-12 flex items-end gap-4 p-4">
           <img src={avatarPreview} alt="Vista previa de perfil" className="h-28 w-28 rounded-full border-4 border-cream object-cover shadow-md" />
-          <label className="mb-2 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-deep-navy px-4 text-sm font-bold text-cream">
+          <label className="mb-2 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-deep-navy px-4 text-sm font-bold text-cream transition-all duration-200 hover:bg-deep-navy/90 active:scale-95">
             <Camera size={16} />
             Cambiar foto
             <input type="file" accept="image/*" className="sr-only" onChange={(event) => setAvatarFile(event.target.files?.[0] || null)} />
@@ -217,7 +217,7 @@ export function ProfileSettings() {
           <p className="text-sm text-deep-navy/60">{locationStatus}</p>
           <button
             onClick={handleUseLocation}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-heritage-gold px-4 text-sm font-bold text-deep-navy"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-heritage-gold px-4 text-sm font-bold text-cream transition-all duration-200 hover:bg-heritage-gold-dark active:scale-95"
           >
             <MapPin size={17} />
             Usar ubicacion
@@ -228,7 +228,7 @@ export function ProfileSettings() {
       <button
         onClick={() => void handleSave()}
         disabled={saving}
-        className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream disabled:opacity-50"
+        className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream transition-all duration-200 hover:bg-deep-navy/90 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
       >
         <Save size={18} />
         {saving ? 'Guardando...' : 'Guardar cambios'}

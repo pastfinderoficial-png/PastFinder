@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { PastFinderLogo } from '../components/PastFinderLogo';
 import { openTermsModal } from '../components/TermsModal';
+import authPhoto from '../assets/carousel/hero-2.jpg';
 
 type AuthProps = {
   mode?: 'login' | 'register';
@@ -107,11 +108,17 @@ export function Auth({ mode = 'login' }: AuthProps) {
 
   return (
     <div className="min-h-screen bg-cream md:grid md:grid-cols-[1.05fr_0.95fr]">
-      <section className="relative flex min-h-[48vh] flex-col justify-between overflow-hidden bg-deep-navy p-8 text-cream md:min-h-screen md:p-12">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute left-10 top-24 h-40 w-40 rounded-full border border-heritage-gold" />
-          <div className="absolute bottom-20 right-12 h-72 w-72 rounded-full border-2 border-heritage-gold" />
-        </div>
+      <section
+        className="relative flex min-h-[48vh] flex-col justify-between overflow-hidden bg-deep-navy p-8 text-cream md:min-h-screen md:p-12"
+        style={{ backgroundImage: `url(${authPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(51,66,76,0.88) 0%, rgba(51,66,76,0.55) 38%, rgba(51,66,76,0.72) 70%, rgba(51,66,76,0.94) 100%)',
+          }}
+        />
 
         <div className="relative z-10 flex items-center gap-3">
           <PastFinderLogo inverse />

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Grid, FileText, Mic, Video, Heart, Compass, Users, Sparkles } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { CATEGORIES } from '../constants/categories';
+import { PhotoBanner } from '../components/PhotoBanner';
+import bannerPhoto from '../assets/carousel/hero-5.jpg';
 
 const categoryIcons: Record<string, typeof FileText> = {
   'Amor y compania': Heart,
@@ -39,7 +41,7 @@ export function Categorias() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 pb-32 md:py-10">
-      <section className="mb-8 rounded-2xl bg-deep-navy p-6 text-cream shadow-sm md:p-8">
+      <PhotoBanner image={bannerPhoto} className="mb-8" contentClassName="p-6 md:p-8">
         <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-heritage-gold">
           <Grid size={14} />
           Categorias
@@ -48,7 +50,7 @@ export function Categorias() {
         <p className="max-w-2xl text-lg leading-7 text-cream/70">
           Encuentra relatos, audios y videos organizados por lo que mas te interesa.
         </p>
-      </section>
+      </PhotoBanner>
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -64,7 +66,7 @@ export function Categorias() {
               <Link
                 key={category}
                 to={`/historias?categoria=${encodeURIComponent(category)}`}
-                className="flex items-center gap-4 rounded-2xl bg-surface-elevated p-5 shadow-sm transition-shadow hover:shadow-md"
+                className="flex items-center gap-4 rounded-[1.75rem] bg-surface-elevated p-5 shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_48px_-20px_rgba(55,66,74,0.3)] active:scale-[0.99]"
               >
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-heritage-gold/20 text-heritage-gold">
                   <Icon size={26} />

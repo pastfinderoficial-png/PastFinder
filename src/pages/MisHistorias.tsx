@@ -93,7 +93,7 @@ export function MisHistorias() {
         </div>
         <button
           onClick={() => navigate('/studio')}
-          className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream"
+          className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream transition-all duration-200 active:scale-[0.98]"
         >
           <PlusCircle size={20} />
           Nueva historia
@@ -118,7 +118,7 @@ export function MisHistorias() {
           <h2 className="mb-2 text-2xl font-bold text-deep-navy">Aun no tienes historias en esta seccion</h2>
           <button
             onClick={() => navigate('/studio')}
-            className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream"
+            className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-xl bg-deep-navy px-6 font-bold text-cream transition-all duration-200 active:scale-[0.98]"
           >
             <PlusCircle size={20} />
             Crear ahora
@@ -142,7 +142,7 @@ export function MisHistorias() {
 
 function MyPostCard({ post, onEdit, onDelete }: { post: MyPost; onEdit: () => void; onDelete: () => void }) {
   return (
-    <article className="rounded-2xl bg-surface-elevated p-5 shadow-sm">
+    <article className="rounded-[1.75rem] bg-surface-elevated p-5 shadow-[0_20px_40px_-24px_rgba(55,66,74,0.25)]">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {post.category && <Badge label={post.category} />}
@@ -152,7 +152,7 @@ function MyPostCard({ post, onEdit, onDelete }: { post: MyPost; onEdit: () => vo
           <button
             onClick={onEdit}
             aria-label="Editar historia"
-            className="inline-flex min-h-10 items-center gap-2 rounded-full bg-surface-subtle px-4 text-xs font-bold text-deep-navy transition-colors hover:bg-heritage-gold hover:text-deep-navy"
+            className="inline-flex min-h-10 items-center gap-2 rounded-full bg-surface-subtle px-4 text-xs font-bold text-deep-navy transition-all duration-200 hover:bg-heritage-gold hover:text-cream active:scale-95"
           >
             <Pencil size={15} />
             Editar
@@ -160,7 +160,7 @@ function MyPostCard({ post, onEdit, onDelete }: { post: MyPost; onEdit: () => vo
           <button
             onClick={onDelete}
             aria-label="Eliminar historia"
-            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-red-200 px-4 text-xs font-bold text-red-600 transition-colors hover:bg-red-50"
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-red-200 px-4 text-xs font-bold text-red-600 transition-all duration-200 hover:bg-red-50 active:scale-95"
           >
             <Trash2 size={15} />
             Eliminar
@@ -193,7 +193,7 @@ function TabButton({ active, icon: Icon, label, onClick }: { active: boolean; ic
     <button
       onClick={onClick}
       className={cn(
-        'flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl font-bold transition-all',
+        'flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl font-bold transition-all duration-200 active:scale-95',
         active ? 'bg-deep-navy text-cream shadow-sm' : 'text-deep-navy/55 hover:text-deep-navy',
       )}
     >

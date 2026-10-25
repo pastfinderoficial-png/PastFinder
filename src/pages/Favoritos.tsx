@@ -4,6 +4,8 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { StoryCard } from '../components/StoryCard';
 import type { StoryCardPost } from '../components/StoryCard';
+import { PhotoBanner } from '../components/PhotoBanner';
+import bannerPhoto from '../assets/carousel/senior-3.jpg';
 
 type FavoriteRow = {
   post_id: string;
@@ -23,7 +25,7 @@ export function Favoritos() {
       const { data } = await supabase
         .from('favorites')
         .select(
-          'post_id, posts ( id, title, description, media_type, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url ) )',
+          'post_id, posts ( id, title, description, media_type, media_url, category, is_ppv, is_sub_only, created_at, creators ( user_id, display_name, profile_image_url ) )',
         )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -38,14 +40,14 @@ export function Favoritos() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 pb-32 md:py-10">
-      <section className="mb-8 rounded-2xl bg-deep-navy p-6 text-cream shadow-sm md:p-8">
+      <PhotoBanner image={bannerPhoto} className="mb-8" contentClassName="p-6 md:p-8">
         <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-heritage-gold">
           <Bookmark size={14} />
           Favoritos
         </p>
         <h1 className="mb-2 text-4xl font-bold md:text-5xl">Tus historias guardadas.</h1>
         <p className="max-w-2xl text-cream/70">Encuentra aqui todo lo que has guardado para leer despues.</p>
-      </section>
+      </PhotoBanner>
 
       {loading ? (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
